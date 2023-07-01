@@ -71,7 +71,6 @@ def main():
 
     ## Actually doing stuff for thermal data ##
 
-
     # I want to do a check here so I don't waste api calls on data I already have
     # This will get a list of any expected files that may not be there
 
@@ -81,35 +80,21 @@ def main():
         satFunctions.routine(farm_bbox, farm_size, slots, sat_image_save_path, thermalPreface, farm_coords_wgs84,
                              figure_save_path, csvpath)
     elif(len(nonexisting) != 0):
-        slots = []
+        flots = []
 
         for file_name in nonexisting:
             date_strings = file_name.split("_")[0:2]
             start_date, end_date = date_strings
-            slots.append((start_date, end_date))
+            flots.append((start_date, end_date))
 
-        satFunctions.routine(farm_bbox, farm_size, slots, sat_image_save_path, thermalPreface, farm_coords_wgs84,
+        satFunctions.routine(farm_bbox, farm_size, flots, sat_image_save_path, thermalPreface, farm_coords_wgs84,
                              figure_save_path, csvpath)
-
-    # create a list of requests
-    list_of_requests = [requestFunctions.get_thermal_request(slot, farm_bbox, farm_size, config) for slot in slots]
-    list_of_requests = [request.download_list[0] for request in list_of_requests]
-
-    # download data with multiple threads
-    data = SentinelHubDownloadClient(config=config).download(list_of_requests, max_threads=5)
-
-    # We are going to download these now as pngs so we don't have to call the api every time
-    satFunctions.save_ndarrays_as_npy(data, sat_image_save_path, preface = thermalPreface, date_tuples= slots)
-    satFunctions.save_ndarrays_as_pngs(data, sat_image_save_path, preface=thermalPreface, date_tuples=slots)
-
-    # plot the data nicely
-    satFunctions.plot_ndarrays(data, slots, farm_coords_wgs84, save_path=figure_save_path + 'thermalFigure.png')
-
-    ## Writing thermal data to csv
-
-    satFunctions.write_data_to_csv(data, slots, csvpath)
+    else:
+        print("All of these files are already downloaded")
 
     ## End of stuff for thermal data ##
+
+
 
 if __name__ == "__main__":
     main()
