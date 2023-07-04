@@ -93,13 +93,16 @@ def get_timeslots(start, end, n_chunks):
 
     return slots
 
-def create_blank_csv(filename):
+
+def create_blank_file(filename):
+    _, file_extension = os.path.splitext(filename)
     if os.path.exists(filename):
-        print(f"Error: CSV file '{filename}' already exists, continuing.")
+        print(f"Error: File '{filename}' already exists, continuing.")
     else:
-        with open(filename, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([])  # Write an empty row
+        with open(filename, 'w'):
+            pass # Removed creation of empty row as that caused issues with the
+                            # current writing method due to now using append mode instead of write mode
+                            # Not the main fix for this commit so commenting here, will remove later
 
 def write_data_to_csv(ndarrays, slots, csv_path):
     # Prepare the data for writing to CSV
@@ -197,7 +200,7 @@ def write_data_to_csv_old(ndarrays, slots, csv_path):
         writer.writerows(existing_data)
 
 
-def save_ndarrays_as_pngs(ndarrays, path, preface="image", date_tuples=None):
+def save_ndarrays_as_png(ndarrays, path, preface="image", date_tuples=None):
     # Create the directory if it doesn't exist
     if not os.path.exists(path):
         os.makedirs(path)
@@ -245,6 +248,28 @@ def save_ndarrays_as_npy(ndarrays, path, preface="array", date_tuples=None):
         full_filename = os.path.join(path, filename)
         np.save(full_filename, arr)
 
+
+def populate_text_file(date_tuples, file_extension, path, preface):
+    # Open the text file in append mode
+    with open(path, "a") as file:
+        # Iterate over the date tuples
+        for i, date_tuple in enumerate(date_tuples):
+            # Generate the filename
+            filename = f"{preface}_{i}{file_extension}"
+            if len(date_tuple) == 2:
+                date_str_1 = date_tuple[0]
+                date_str_2 = date_tuple[1]
+                # Convert string dates to datetime objects
+                date_obj_1 = datetime.strptime(date_str_1, "%Y-%m-%d")
+                date_obj_2 = datetime.strptime(date_str_2, "%Y-%m-%d")
+                date_formatted_1 = date_obj_1.strftime("%Y-%m-%d")
+                date_formatted_2 = date_obj_2.strftime("%Y-%m-%d")
+                filename = f"{date_formatted_1}_{date_formatted_2}_{filename}"
+
+            # Write the filename to the text file
+            file.write(filename + "\n")
+
+
 def check_files_exist(slots, file_extension, directory_path, preface):
     non_existing_files = []
 
@@ -257,19 +282,53 @@ def check_files_exist(slots, file_extension, directory_path, preface):
 
     return non_existing_files
 
-def routine(farm_bbox, farm_size, slots, sat_image_save_path, thermalPreface, farm_coords_wgs84, figure_save_path, csvpath):
+def check_files_exist_in_text_file(date_tuples, file_extension, file_path, preface):
+    # Read the contents of the text file
+    with open(file_path, "r") as file:
+        existing_files = file.read().splitlines()
+
+    non_existing_files = []
+
+    # Iterate over the date tuples
+    for i, date_tuple in enumerate(date_tuples):
+        # Generate the filename
+        filename = f"{preface}_{i}{file_extension}"
+        if len(date_tuple) == 2:
+            date_str_1 = date_tuple[0]
+            date_str_2 = date_tuple[1]
+            # Convert string dates to datetime objects
+            date_obj_1 = datetime.strptime(date_str_1, "%Y-%m-%d")
+            date_obj_2 = datetime.strptime(date_str_2, "%Y-%m-%d")
+            date_formatted_1 = date_obj_1.strftime("%Y-%m-%d")
+            date_formatted_2 = date_obj_2.strftime("%Y-%m-%d")
+            filename = f"{date_formatted_1}_{date_formatted_2}_{filename}"
+
+        # Check if the filename exists in the text file
+        if filename not in existing_files:
+            non_existing_files.append(filename)
+
+    return non_existing_files
+
+
+def routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
+            figure_save_path, csvpath, operext, request_function, createImages = False):
     # create a list of requests
-    list_of_requests = [requestFunctions.get_thermal_request(slot, farm_bbox, farm_size, config) for slot in slots]
+    list_of_requests = [request_function(slot, farm_bbox, farm_size, config) for slot in slots]
     list_of_requests = [request.download_list[0] for request in list_of_requests]
 
     # download data with multiple threads
     data = SentinelHubDownloadClient(config=config).download(list_of_requests, max_threads=5)
 
-    # We are going to download these now as pngs so we don't have to call the api every time
-    save_ndarrays_as_npy(data, sat_image_save_path, preface=thermalPreface, date_tuples=slots)
-    save_ndarrays_as_pngs(data, sat_image_save_path, preface=thermalPreface, date_tuples=slots)
+    # We are going to download these now as pngs so we don't have to call the api every time,
+                                        # only done if createImages variable is True
+    if (createImages):
+        save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=slots)
+        save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=slots)
 
-    name = slots[0][0] + "_" + slots[len(slots)-1][1] + thermalPreface + '.png'
+    # Now we create a text file with the data we have so we don't waste api calls if we are just filling data
+    populate_text_file(slots, operext, operations_save_path, preface)
+
+    name = slots[0][0] + "_" + slots[len(slots)-1][1] + preface + '.png'
 
     # plot the data nicely
     plot_ndarrays(data, slots, farm_coords_wgs84, save_path=figure_save_path + name)

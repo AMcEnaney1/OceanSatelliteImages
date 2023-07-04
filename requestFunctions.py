@@ -46,3 +46,18 @@ def get_thermal_request(time_interval, farm_bbox, farm_size, config):
         size=farm_size,
         config=config,
     )
+
+def get_chlorophyll_request(time_interval, farm_bbox, farm_size, config):
+    return SentinelHubRequest(
+        evalscript=evalscripts.evalscript_c,
+        input_data=[
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL3_OLCI,
+                time_interval=time_interval,
+            )
+        ],
+        responses=[SentinelHubRequest.output_response("default", MimeType.TIFF)],
+        bbox=farm_bbox,
+        size=farm_size,
+        config=config,
+    )
