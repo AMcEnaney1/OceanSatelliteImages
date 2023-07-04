@@ -7,7 +7,6 @@
 
 from configg import *
 import shutil
-import requestFunctions
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -68,7 +67,7 @@ def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
     if save_path:
         plt.savefig(save_path)  # Save the figure as an image file
 
-    plt.show()
+    plt.close()
 
 def convert_to_celsius(temperature_array):
     temperature_celsius = temperature_array - 273.15
@@ -81,9 +80,9 @@ def convert_to_fahrenheit(temperature_array):
 def get_timeslots(start, end, n_chunks):
     tdelta = (end - start) / n_chunks
     edges = [(start + i * tdelta).date().isoformat() for i in range(n_chunks)]
-    slots = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
+    date_tuples = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
 
-    return slots
+    return date_tuples
 
 
 def create_blank_file(filename):
@@ -96,10 +95,10 @@ def create_blank_file(filename):
                             # current writing method due to now using append mode instead of write mode
                             # Not the main fix for this commit so commenting here, will remove later
 
-def write_data_to_csv(ndarrays, slots, csv_path):
+def write_data_to_csv(ndarrays, date_tuples, csv_path):
     # Prepare the data for writing to CSV
     data = []
-    for date, arr in zip(slots, ndarrays):
+    for date, arr in zip(date_tuples, ndarrays):
         average = np.average(arr)
         minimum = np.min(arr)
         maximum = np.max(arr)
@@ -146,51 +145,6 @@ def sort_csv_by_date(csv_file):
             writer.writerows(sorted_rows)
 
     shutil.move(temp_file, csv_file)
-
-
-def write_data_to_csv_old(ndarrays, slots, csv_path):
-    # Prepare the data for writing to CSV
-    data = []
-    for date, arr in zip(slots, ndarrays):
-        average = np.average(arr)
-        minimum = np.min(arr)
-        maximum = np.max(arr)
-        std_dev = np.std(arr)
-        data.append([date, average, minimum, maximum, std_dev])
-
-    # Write data to the CSV file
-    with open(csv_path, 'a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-
-        # Check if the file is empty
-        file_empty = csvfile.tell() == 0
-
-        if file_empty:
-            writer.writerow(['Date Range', 'Average', 'Minimum', 'Maximum', 'Standard Deviation'])  # Write header row
-
-        # Read existing data from the file
-        existing_data = []
-        if not file_empty:
-            reader = csv.reader(csvfile)
-            existing_data = list(reader)
-
-        # Insert new data in the correct row based on the date
-        for new_row in data:
-            new_date = new_row[0]
-            row_inserted = False
-            for i, existing_row in enumerate(existing_data):
-                if new_date < existing_row[0]:
-                    existing_data.insert(i, new_row)
-                    row_inserted = True
-                    break
-
-            if not row_inserted:
-                existing_data.append(new_row)
-
-        # Write all the data to the file
-        csvfile.seek(0)
-        writer.writerows(existing_data)
-
 
 def save_ndarrays_as_png(ndarrays, path, preface="image", date_tuples=None):
     # Create the directory if it doesn't exist
@@ -262,10 +216,10 @@ def populate_text_file(date_tuples, file_extension, path, preface):
             file.write(filename + "\n")
 
 
-def check_files_exist(slots, file_extension, directory_path, preface):
+def check_files_exist(date_tuples, file_extension, directory_path, preface):
     non_existing_files = []
 
-    for i, (start_date, end_date) in enumerate(slots):
+    for i, (start_date, end_date) in enumerate(date_tuples):
         file_name = f"{start_date}_{end_date}_{preface}_{i}{file_extension}"
         file_path = os.path.join(directory_path, file_name)
 
@@ -302,10 +256,10 @@ def check_files_exist_in_text_file(date_tuples, file_extension, file_path, prefa
     return non_existing_files
 
 
-def routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
+def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
             figure_save_path, csvpath, operext, request_function, createImages = False):
     # create a list of requests
-    list_of_requests = [request_function(slot, farm_bbox, farm_size, config) for slot in slots]
+    list_of_requests = [request_function(slot, farm_bbox, farm_size, config) for slot in date_tuples]
     list_of_requests = [request.download_list[0] for request in list_of_requests]
 
     # download data with multiple threads
@@ -314,23 +268,23 @@ def routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_pa
     # We are going to download these now as pngs so we don't have to call the api every time,
                                         # only done if createImages variable is True
     if (createImages):
-        save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=slots)
-        save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=slots)
+        save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=date_tuples)
+        save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=date_tuples)
 
     # Now we create a text file with the data we have so we don't waste api calls if we are just filling data
-    populate_text_file(slots, operext, operations_save_path, preface)
+    populate_text_file(date_tuples, operext, operations_save_path, preface)
 
-    name = slots[0][0] + "_" + slots[len(slots)-1][1] + preface + '.png'
+    name = date_tuples[0][0] + "_" + date_tuples[len(date_tuples)-1][1] + preface + '.png'
 
     # plot the data nicely
-    plot_ndarrays(data, slots, farm_coords_wgs84, save_path=figure_save_path + name)
+    plot_ndarrays(data, date_tuples, farm_coords_wgs84, save_path=figure_save_path + name)
 
     ## Writing thermal data to csv
 
-    write_data_to_csv(data, slots, csvpath)
+    write_data_to_csv(data, date_tuples, csvpath)
     sort_csv_by_date(csvpath) # We do this here instead of in the write so its more efficient and can be moved
 
-def core(resolution, slots, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
+def core(resolution, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
             figure_save_path, csvpath, operext, request_function, createImages = False):
 
     # Setting up resolution and stuff
@@ -348,15 +302,13 @@ def core(resolution, slots, sat_image_save_path, operations_save_path, preface, 
     # This will get a list of any expected files that may not be there
 
     if createImages:
-        nonexisting = check_files_exist(slots, operext, sat_image_save_path, preface)
+        nonexisting = check_files_exist(date_tuples, operext, sat_image_save_path, preface)
     else:
-        nonexisting = check_files_exist_in_text_file(slots, operext, operations_save_path, preface)
+        nonexisting = check_files_exist_in_text_file(date_tuples, operext, operations_save_path, preface)
 
-    if (len(nonexisting) == len(slots)):
-        routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_path, preface,
-                             farm_coords_wgs84,
-                             figure_save_path, csvpath, operext,
-                             request_function=requestFunctions.get_thermal_request)
+    if (len(nonexisting) == len(date_tuples)):
+        routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface,
+                             farm_coords_wgs84, figure_save_path, csvpath, operext,request_function)
     elif (len(nonexisting) != 0):
         flots = []
 
@@ -366,8 +318,6 @@ def core(resolution, slots, sat_image_save_path, operations_save_path, preface, 
             flots.append((start_date, end_date))
 
         routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, preface,
-                             farm_coords_wgs84,
-                             figure_save_path, csvpath, operext,
-                             request_function=requestFunctions.get_thermal_request)
+                             farm_coords_wgs84, figure_save_path, csvpath, operext, request_function)
     else:
         print("All of these files are already downloaded")
