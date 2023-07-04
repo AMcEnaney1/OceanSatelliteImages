@@ -14,20 +14,12 @@ from PIL import Image
 import io
 from datetime import datetime
 import os
-from utils import plot_image
-import math
 import csv
 from sentinelhub import (
     CRS,
     BBox,
-    DataCollection,
-    DownloadRequest,
-    MimeType,
-    MosaickingOrder,
     SentinelHubDownloadClient,
-    SentinelHubRequest,
     bbox_to_dimensions,
-    SHConfig,
 )
 
 ## End of Imports
@@ -337,3 +329,45 @@ def routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_pa
 
     write_data_to_csv(data, slots, csvpath)
     sort_csv_by_date(csvpath) # We do this here instead of in the write so its more efficient and can be moved
+
+def core(resolution, slots, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
+            figure_save_path, csvpath, operext, request_function, createImages = False):
+
+    # Setting up resolution and stuff
+
+    farm_bbox = BBox(bbox=farm_coords_wgs84, crs=CRS.WGS84)
+    farm_size = bbox_to_dimensions(farm_bbox, resolution=resolution)
+
+    # print(f"Image shape at {resolution} m resolution: {farm_size} pixels") # Troubleshooting code
+
+    # Creating csv
+
+    create_blank_file(csvpath)
+
+    # I want to do a check here so I don't waste api calls on data I already have
+    # This will get a list of any expected files that may not be there
+
+    if createImages:
+        nonexisting = check_files_exist(slots, operext, sat_image_save_path, preface)
+    else:
+        nonexisting = check_files_exist_in_text_file(slots, operext, operations_save_path, preface)
+
+    if (len(nonexisting) == len(slots)):
+        routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_path, preface,
+                             farm_coords_wgs84,
+                             figure_save_path, csvpath, operext,
+                             request_function=requestFunctions.get_thermal_request)
+    elif (len(nonexisting) != 0):
+        flots = []
+
+        for file_name in nonexisting:
+            date_strings = file_name.split("_")[0:2]
+            start_date, end_date = date_strings
+            flots.append((start_date, end_date))
+
+        routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, preface,
+                             farm_coords_wgs84,
+                             figure_save_path, csvpath, operext,
+                             request_function=requestFunctions.get_thermal_request)
+    else:
+        print("All of these files are already downloaded")

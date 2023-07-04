@@ -5,29 +5,13 @@
 
 ## Imports
 
-import satFunctions
 import evalscripts
-import keys
-import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
-import io
-import datetime
-import os
 from sentinelhub import (
-    CRS,
-    BBox,
     DataCollection,
-    DownloadRequest,
     MimeType,
     MosaickingOrder,
-    SentinelHubDownloadClient,
     SentinelHubRequest,
-    bbox_to_dimensions,
-    SHConfig,
 )
-from utils import plot_image
-import math
 
 ## End of Imports
 

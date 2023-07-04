@@ -6,32 +6,9 @@
 ## Imports
 
 import satFunctions
-import evalscripts
 import requestFunctions
-import keys
 from configg import *
-import numpy as np
-import matplotlib.pyplot as plt
-from oauthlib.oauth2 import BackendApplicationClient
-from requests_oauthlib import OAuth2Session
-from PIL import Image
-import io
 import datetime
-import os
-from sentinelhub import (
-    CRS,
-    BBox,
-    DataCollection,
-    DownloadRequest,
-    MimeType,
-    MosaickingOrder,
-    SentinelHubDownloadClient,
-    SentinelHubRequest,
-    bbox_to_dimensions,
-    SHConfig,
-)
-from utils import plot_image
-import math
 
 ## End of Imports
 
@@ -72,85 +49,18 @@ def main():
 
     satFunctions.create_blank_file(operations_save_path)
 
-    ## Actually doing stuff for thermal data ##
-
-    # Setting up resolution and stuff
+    # Thermal Data
 
     resolution = 30  # Resolution for thermal images
-    farm_bbox = BBox(bbox=farm_coords_wgs84, crs=CRS.WGS84)
-    farm_size = bbox_to_dimensions(farm_bbox, resolution=resolution)
+    satFunctions.core(resolution, slots, sat_image_save_path, operations_save_path, thermalPreface, farm_coords_wgs84,
+                    figure_save_path, csvpath_thermal, operext, request_function=requestFunctions.get_thermal_request)
 
-    # print(f"Image shape at {resolution} m resolution: {farm_size} pixels") # Troubleshooting code
-
-    # Creating csv
-
-    satFunctions.create_blank_file(csvpath_thermal)
-
-    # I want to do a check here so I don't waste api calls on data I already have
-    # This will get a list of any expected files that may not be there
-
-    if createImages:
-        nonexisting = satFunctions.check_files_exist(slots, operext, sat_image_save_path, thermalPreface)
-    else:
-        nonexisting = satFunctions.check_files_exist_in_text_file(slots, operext, operations_save_path, thermalPreface)
-
-    if(len(nonexisting) == len(slots)):
-        satFunctions.routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_path, thermalPreface, farm_coords_wgs84,
-                             figure_save_path, csvpath_thermal, operext, request_function=requestFunctions.get_thermal_request)
-    elif(len(nonexisting) != 0):
-        flots = []
-
-        for file_name in nonexisting:
-            date_strings = file_name.split("_")[0:2]
-            start_date, end_date = date_strings
-            flots.append((start_date, end_date))
-
-        satFunctions.routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, thermalPreface, farm_coords_wgs84,
-                             figure_save_path, csvpath_thermal, operext, request_function=requestFunctions.get_thermal_request)
-    else:
-        print("All of these files are already downloaded")
-
-    ## End of stuff for thermal data ##
-
-
-    ## Start of stuff for Chlorophyll
-
-    # Setting up resolution and stuff
+    # Chlorophyll Data
 
     resolution = 100  # Resolution for chlorophyll images, actual res is 300,
                                     # but we can't assume our bbox line up exactl, especially with such a small area
-    farm_bbox = BBox(bbox=farm_coords_wgs84, crs=CRS.WGS84)
-    farm_size = bbox_to_dimensions(farm_bbox, resolution=resolution)
-
-        # print(f"Image shape at {resolution} m resolution: {farm_size} pixels") # Troubleshooting code
-
-    # Creating csv
-
-    satFunctions.create_blank_file(csvpath_chlorophyll)
-
-    # I want to do a check here so I don't waste api calls on data I already have
-    # This will get a list of any expected files that may not be there
-
-    nonexisting = satFunctions.check_files_exist(slots, '.npy', sat_image_save_path, chlorophyllPreface)
-
-    if(len(nonexisting) == len(slots)):
-        satFunctions.routine(farm_bbox, farm_size, slots, sat_image_save_path, operations_save_path, chlorophyllPreface, farm_coords_wgs84,
-                             figure_save_path, csvpath_chlorophyll, operext, request_function=requestFunctions.get_chlorophyll_request)
-    elif(len(nonexisting) != 0):
-        flots = []
-
-        for file_name in nonexisting:
-            date_strings = file_name.split("_")[0:2]
-            start_date, end_date = date_strings
-            flots.append((start_date, end_date))
-
-        satFunctions.routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, chlorophyllPreface, farm_coords_wgs84,
-                             figure_save_path, csvpath_chlorophyll, operext, request_function=requestFunctions.get_chlorophyll_request)
-    else:
-        print("All of these files are already downloaded")
-
-    ## End of stuff for chlorophyll data ##
-
+    satFunctions.core(resolution, slots, sat_image_save_path, operations_save_path, chlorophyllPreface, farm_coords_wgs84,
+                    figure_save_path, csvpath_chlorophyll, operext, request_function=requestFunctions.get_chlorophyll_request)
 
 if __name__ == "__main__":
     main()
