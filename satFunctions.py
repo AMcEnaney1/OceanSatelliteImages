@@ -5,12 +5,11 @@
 
 ## Imports
 
+import plotFunctions
 from configg import *
 import shutil
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image
-import io
 from datetime import datetime
 import os
 import csv
@@ -22,52 +21,6 @@ from sentinelhub import (
 )
 
 ## End of Imports
-
-def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
-    if len(ndarrays) != len(titles):
-        raise ValueError("Number of ndarrays and titles must be the same.")
-
-    if save_path and os.path.exists(save_path):
-        print("Error: File already exists. Please choose a different filename.")
-        return
-
-    num_plots = len(ndarrays)
-    num_rows = (num_plots - 1) // num_columns + 1
-
-    fig, axes = plt.subplots(num_rows, num_columns, figsize=(4 * num_columns, 4 * num_rows))
-    axes = axes.ravel()  # Flatten the axes array
-
-    for i, (arr, title) in enumerate(zip(ndarrays, titles)):
-        ax = axes[i]
-
-        # Plot the ndarray
-        img = ax.imshow(arr)
-        ax.set_title(' to '.join(map(str, title)))  # Concatenate the title elements with a '-' character
-
-        # Set the custom coordinate labels
-        lon_left, lat_bottom, lon_right, lat_top = coordinates
-        x_ticks = np.linspace(0, arr.shape[1] - 1, num=5)
-        y_ticks = np.linspace(0, arr.shape[0] - 1, num=5)
-        x_labels = np.linspace(lon_left, lon_right, num=5)
-        y_labels = np.linspace(lat_bottom, lat_top, num=5)
-        ax.set_xticks(x_ticks)
-        ax.set_yticks(y_ticks)
-        ax.set_xticklabels(["{:.4f}".format(x) for x in x_labels])
-        ax.set_yticklabels(["{:.4f}".format(y) for y in y_labels])
-
-        # Rotate x-axis labels by 45 degrees
-        ax.tick_params(axis='x', labelrotation=45)
-
-    # Hide any unused subplots
-    for j in range(num_plots, num_rows * num_columns):
-        fig.delaxes(axes[j])
-
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path)  # Save the figure as an image file
-
-    plt.close()
 
 def convert_to_celsius(temperature_array):
     temperature_celsius = temperature_array - 273.15
@@ -146,7 +99,7 @@ def sort_csv_by_date(csv_file):
 
     shutil.move(temp_file, csv_file)
 
-def save_ndarrays_as_png(ndarrays, path, preface="image", date_tuples=None):
+def save_ndarrays_as_png(ndarrays, path, preface="image", date_tuples=None, project_name='name'):
     # Create the directory if it doesn't exist
     if not os.path.exists(path):
         os.makedirs(path)
@@ -172,11 +125,13 @@ def save_ndarrays_as_png(ndarrays, path, preface="image", date_tuples=None):
             date_formatted_2 = date_obj_2.strftime("%Y-%m-%d")
             filename = f"{date_formatted_1}_{date_formatted_2}_{filename}"
 
+        filename = project_name + '_' + filename
+
         # Save the image as PNG
         full_filename = os.path.join(path, filename)
         image.save(full_filename)
 
-def save_ndarrays_as_npy(ndarrays, path, preface="array", date_tuples=None):
+def save_ndarrays_as_npy(ndarrays, path, preface="array", date_tuples=None, project_name='name'):
     # Create the directory if it doesn't exist
     if not os.path.exists(path):
         os.makedirs(path)
@@ -190,12 +145,14 @@ def save_ndarrays_as_npy(ndarrays, path, preface="array", date_tuples=None):
             date_str_2 = date_tuples[i][1]
             filename = f"{date_str_1}_{date_str_2}_{filename}"
 
+        filename = project_name + '_' + filename
+
         # Save the ndarray as .npy file
         full_filename = os.path.join(path, filename)
         np.save(full_filename, arr)
 
 
-def populate_text_file(date_tuples, file_extension, path, preface):
+def populate_text_file(date_tuples, file_extension, path, preface, project_name = 'name'):
     # Open the text file in append mode
     with open(path, "a") as file:
         # Iterate over the date tuples
@@ -211,6 +168,8 @@ def populate_text_file(date_tuples, file_extension, path, preface):
                 date_formatted_1 = date_obj_1.strftime("%Y-%m-%d")
                 date_formatted_2 = date_obj_2.strftime("%Y-%m-%d")
                 filename = f"{date_formatted_1}_{date_formatted_2}_{filename}"
+
+            filename = project_name + '_' + filename
 
             # Write the filename to the text file
             file.write(filename + "\n")
@@ -228,7 +187,7 @@ def check_files_exist(date_tuples, file_extension, directory_path, preface):
 
     return non_existing_files
 
-def check_files_exist_in_text_file(date_tuples, file_extension, file_path, preface):
+def check_files_exist_in_text_file(date_tuples, file_extension, file_path, preface, project):
     # Read the contents of the text file
     with open(file_path, "r") as file:
         existing_files = file.read().splitlines()
@@ -238,16 +197,7 @@ def check_files_exist_in_text_file(date_tuples, file_extension, file_path, prefa
     # Iterate over the date tuples
     for i, date_tuple in enumerate(date_tuples):
         # Generate the filename
-        filename = f"{preface}_{i}{file_extension}"
-        if len(date_tuple) == 2:
-            date_str_1 = date_tuple[0]
-            date_str_2 = date_tuple[1]
-            # Convert string dates to datetime objects
-            date_obj_1 = datetime.strptime(date_str_1, "%Y-%m-%d")
-            date_obj_2 = datetime.strptime(date_str_2, "%Y-%m-%d")
-            date_formatted_1 = date_obj_1.strftime("%Y-%m-%d")
-            date_formatted_2 = date_obj_2.strftime("%Y-%m-%d")
-            filename = f"{date_formatted_1}_{date_formatted_2}_{filename}"
+        filename = f"{project}_{'_'.join(date_tuple)}_{preface}_{i}{file_extension}"
 
         # Check if the filename exists in the text file
         if filename not in existing_files:
@@ -257,7 +207,8 @@ def check_files_exist_in_text_file(date_tuples, file_extension, file_path, prefa
 
 
 def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
-            figure_save_path, csvpath, operext, request_function, createImages = False):
+            figure_save_path, csvpath, operext, project_name, request_function, createImages = False):
+
     # create a list of requests
     list_of_requests = [request_function(slot, farm_bbox, farm_size, config) for slot in date_tuples]
     list_of_requests = [request.download_list[0] for request in list_of_requests]
@@ -268,16 +219,16 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
     # We are going to download these now as pngs so we don't have to call the api every time,
                                         # only done if createImages variable is True
     if (createImages):
-        save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=date_tuples)
-        save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=date_tuples)
+        save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
+        save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
 
     # Now we create a text file with the data we have so we don't waste api calls if we are just filling data
-    populate_text_file(date_tuples, operext, operations_save_path, preface)
+    populate_text_file(date_tuples, operext, operations_save_path, preface, project_name)
 
     name = date_tuples[0][0] + "_" + date_tuples[len(date_tuples)-1][1] + preface + '.png'
 
     # plot the data nicely
-    plot_ndarrays(data, date_tuples, farm_coords_wgs84, save_path=figure_save_path + name)
+    plotFunctions.plot_ndarrays(data, date_tuples, farm_coords_wgs84, save_path=figure_save_path + project_name + '_' + name)
 
     ## Writing thermal data to csv
 
@@ -285,7 +236,7 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
     sort_csv_by_date(csvpath) # We do this here instead of in the write so its more efficient and can be moved
 
 def core(resolution, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
-            figure_save_path, csvpath, operext, request_function, createImages = False):
+            figure_save_path, csvpath, operext, project_name, request_function, createImages = False):
 
     # Setting up resolution and stuff
 
@@ -301,14 +252,19 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
     # I want to do a check here so I don't waste api calls on data I already have
     # This will get a list of any expected files that may not be there
 
-    if createImages:
+    # We also need to create our log file, if one doesn't already exist
+
+    if (not os.path.exists(operations_save_path)): # Operation log file doesn't already exist
+        create_blank_file(operations_save_path) # Create operation log file if it doesn't already exist
+
+    if (createImages):
         nonexisting = check_files_exist(date_tuples, operext, sat_image_save_path, preface)
     else:
-        nonexisting = check_files_exist_in_text_file(date_tuples, operext, operations_save_path, preface)
+        nonexisting = check_files_exist_in_text_file(date_tuples, operext, operations_save_path, preface, project_name)
 
     if (len(nonexisting) == len(date_tuples)):
         routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface,
-                             farm_coords_wgs84, figure_save_path, csvpath, operext,request_function)
+                             farm_coords_wgs84, figure_save_path, csvpath, operext, project_name, request_function, createImages = createImages)
     elif (len(nonexisting) != 0):
         flots = []
 
@@ -318,6 +274,6 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
             flots.append((start_date, end_date))
 
         routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, preface,
-                             farm_coords_wgs84, figure_save_path, csvpath, operext, request_function)
+                             farm_coords_wgs84, figure_save_path, csvpath, operext, project_name, request_function, createImages = createImages)
     else:
         print("All of these files are already downloaded")

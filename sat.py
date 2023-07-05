@@ -17,56 +17,60 @@ def main():
 
     ## Setting variables ##
 
-    createImages = False # Set to True in order to create .npy and .png files of downloaded images.
+    createImages = [False, False] # Set to True in order to create .npy and .png files of downloaded images.
                                         # Double check that it actually passed to the routine funcion if set to True
 
-    operext = '.npy'
-    operations_txt_filename = 'oper.txt'
-    csvpath_base = 'out/data/compData'
-    csvpath_thermal =  csvpath_base + '_Thermal.csv'
-    csvpath_chlorophyll = csvpath_base + '_Chlor.csv'
-    figure_save_path = 'out/figures/'
-    sat_image_save_path = 'out/satData/images/'
-    operations_save_path = 'out/satData/logs/' + operations_txt_filename
-    thermalPreface = 'Thermal'
-    chlorophyllPreface = 'Chlor'
+    projectName = ['MaxFarm','ME_Harbor'] # These will be prefixes in the relevant files
+    coordinates = [(-69.9040, 43.8586, -69.8987, 43.8651), (-68.447721,44.146632,-68.444996,44.151682)]
 
-    ## End of setting variables ##
+    for i in range(len(projectName)):
+        operext = '.npy'
+        operations_txt_filename = projectName[i] + '_oper.txt'
+        csvpath_base = 'out/data/' + projectName[i] + '_compData'
+        csvpath_thermal =  csvpath_base + projectName[i] +'_Thermal.csv'
+        csvpath_chlorophyll = csvpath_base + projectName[i] + '_Chlor.csv'
+        figure_save_path = 'out/figures/'
+        sat_image_save_path = 'out/satData/images/'
+        operations_save_path = 'out/satData/logs/' + operations_txt_filename
+        thermalPreface = 'Thermal'
+        chlorophyllPreface = 'Chlor'
 
-    if not config.sh_client_id or not config.sh_client_secret:
-        print("Warning! To use Process API, please provide the credentials (OAuth client ID and client secret).")
+        ## End of setting variables ##
 
-    ## Setting up farm coordinates
-    farm_coords_wgs84 = (-69.9040, 43.8586, -69.8987, 43.8651) # Coordinates for the farm
+        if not config.sh_client_id or not config.sh_client_secret:
+            print("Warning! To use Process API, please provide the credentials (OAuth client ID and client secret).")
 
-    # Setting up start and end date as well as the amount of snapshots
-    start = datetime.datetime(2017, 1, 1)
-    end = datetime.datetime(2022, 12, 31)
-    n_chunks = 121
-    date_tuples = satFunctions.get_timeslots(start, end, n_chunks)
+        ## Setting up farm coordinates
 
-    # Creating operation logging text file
+        farm_coords_wgs84 = coordinates[i]
 
-    satFunctions.create_blank_file(operations_save_path)
+        # Setting up start and end date as well as the amount of snapshots
+        start = datetime.datetime(2022, 1, 1)
+        end = datetime.datetime(2022, 12, 31)
+        n_chunks = 13
+        date_tuples = satFunctions.get_timeslots(start, end, n_chunks)
 
-    # Thermal Data
+        # Thermal Data
 
-    resolution = 30  # Resolution for thermal images
-    satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, thermalPreface, farm_coords_wgs84,
-                    figure_save_path, csvpath_thermal, operext, request_function=requestFunctions.get_thermal_request)
+        resolution = 30  # Resolution for thermal images
+        satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, thermalPreface, farm_coords_wgs84,
+                        figure_save_path, csvpath_thermal, operext, projectName[i], request_function=requestFunctions.get_thermal_request, createImages= createImages[i])
 
-    # Chlorophyll Data
+        # Chlorophyll Data
 
-    resolution = 100  # Resolution for chlorophyll images, actual res is 300,
-                                    # but we can't assume our bbox line up exactl, especially with such a small area
-    satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, chlorophyllPreface, farm_coords_wgs84,
-                    figure_save_path, csvpath_chlorophyll, operext, request_function=requestFunctions.get_chlorophyll_request)
+        resolution = 100  # Resolution for chlorophyll images, actual res is 300,
+                                        # but we can't assume our bbox line up exactl, especially with such a small area
+        satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, chlorophyllPreface, farm_coords_wgs84,
+                        figure_save_path, csvpath_chlorophyll, operext, projectName[i], request_function=requestFunctions.get_chlorophyll_request, createImages= createImages[i])
 
 
-    # Creating plots of data
+        # Creating plots of data
 
-    plotFunctions.plot_csv_data(csvpath_thermal, figure_save_path, 'Average')
-    plotFunctions.plot_csv_data(csvpath_chlorophyll, figure_save_path, 'Average')
+        plotFunctions.plot_csv_data(csvpath_thermal, figure_save_path, 'Average', 'Average Temperature (Celcius)', farm_coords_wgs84, 'Average Temperature vs. Time')
+        plotFunctions.plot_csv_data(csvpath_chlorophyll, figure_save_path, 'Average', 'Average Chlorophyll Concentration', farm_coords_wgs84, 'Average Chlorophyll Concentration vs. Time')
+
+        # How this chlorophyll band works:
+                    # https://sentinels.copernicus.eu/web/sentinel/technical-guides/sentinel-3-olci/level-2/oc4me-chlorophyll
 
 
 if __name__ == "__main__":
