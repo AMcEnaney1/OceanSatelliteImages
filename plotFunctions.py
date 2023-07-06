@@ -10,6 +10,8 @@ import csv
 import matplotlib.pyplot as plt
 import numpy as np
 
+import satFunctions
+
 
 ## End of Imports
 
@@ -19,7 +21,7 @@ def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
         raise ValueError("Number of ndarrays and titles must be the same.")
 
     if save_path and os.path.exists(save_path):
-        print("Error: File already exists. Please choose a different filename.")
+        print(f"Error: File '{save_path}' already exists, continuing.")
         return
 
     num_plots = len(ndarrays)
@@ -60,7 +62,7 @@ def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
 
     plt.close()
 
-def plot_csv_data(csv_path, down_path, column_name, ylabel, corner_text, title=None):
+def plot_csv_data(csv_path, down_path, column_name, ylabel, corner_text, title=None, fah=False):
     xtickCutOff = 20
     corner_text = str(corner_text)
 
@@ -73,7 +75,10 @@ def plot_csv_data(csv_path, down_path, column_name, ylabel, corner_text, title=N
             date_range = row['Date Range']
             start_date = date_range.strip('()').split(',')[0].strip().strip("'")
             dates.append(start_date)
-            values.append(float(row[column_name]))
+            if (fah):
+                values.append(satFunctions.kelvin_to_fahrenheit(float(row[column_name])))
+            else:
+                values.append(float(row[column_name]))
 
     plt.plot(dates, values)
 
@@ -98,7 +103,7 @@ def plot_csv_data(csv_path, down_path, column_name, ylabel, corner_text, title=N
     # Generate the output file path
     csv_filename = os.path.basename(csv_path)
     csv_filename = os.path.splitext(csv_filename)[0]
-    output_file = os.path.join(down_path, f"{csv_filename}_{column_name}.png")
+    output_file = os.path.join(down_path, f"{csv_filename}_{column_name}_{fah}.png")
 
     # Put text in upper right
 

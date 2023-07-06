@@ -45,3 +45,48 @@ def get_chlorophyll_request(time_interval, farm_bbox, farm_size, config):
         size=farm_size,
         config=config,
     )
+
+def get_sediment_request(time_interval, farm_bbox, farm_size, config):
+    return SentinelHubRequest(
+        evalscript=evalscripts.evalscript_s,
+        input_data=[
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL3_OLCI,
+                time_interval=time_interval,
+            )
+        ],
+        responses=[SentinelHubRequest.output_response("default", MimeType.TIFF)],
+        bbox=farm_bbox,
+        size=farm_size,
+        config=config,
+    )
+
+def get_oxygen_request(time_interval, farm_bbox, farm_size, config):
+    return SentinelHubRequest(
+        evalscript=evalscripts.evalscript_o,
+        input_data=[
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL3_OLCI,
+                time_interval=time_interval,
+            )
+        ],
+        responses=[SentinelHubRequest.output_response("default", MimeType.TIFF)],
+        bbox=farm_bbox,
+        size=farm_size,
+        config=config,
+    )
+
+def get_all_s2l2a_request(time_interval, farm_bbox, farm_size, config):
+    return SentinelHubRequest(
+        evalscript=evalscripts.evalscript_all_s2l2a,
+        input_data=[
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL2_L2A,
+                time_interval=time_interval,
+            )
+        ],
+        responses=[SentinelHubRequest.output_response("default", MimeType.TIFF)],
+        bbox=farm_bbox,
+        size=farm_size,
+        config=config,
+)

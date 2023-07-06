@@ -22,13 +22,9 @@ from sentinelhub import (
 
 ## End of Imports
 
-def convert_to_celsius(temperature_array):
-    temperature_celsius = temperature_array - 273.15
-    return temperature_celsius
-
-def convert_to_fahrenheit(temperature_array):
-    temperature_fahrenheit = (temperature_array * 9/5) - 459.67
-    return temperature_fahrenheit
+def kelvin_to_fahrenheit(kelvin):
+    fahrenheit = (kelvin - 273.15) * 9/5 + 32
+    return fahrenheit
 
 def get_timeslots(start, end, n_chunks):
     tdelta = (end - start) / n_chunks
@@ -205,9 +201,16 @@ def check_files_exist_in_text_file(date_tuples, file_extension, file_path, prefa
 
     return non_existing_files
 
+def reshape_data(data, p):
+    reshaped_data = []
+    for arr in data:
+        reshaped_arr = np.transpose(arr, axes=(0, 1, 2))
+        reshaped_arr = reshaped_arr[:, :, p]
+        reshaped_data.append(reshaped_arr)
+    return reshaped_data
 
 def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
-            figure_save_path, csvpath, operext, project_name, request_function, createImages = False):
+            figure_save_path, csvpath, operext, project_name, request_function, createImages = False, i=0):
 
     # create a list of requests
     list_of_requests = [request_function(slot, farm_bbox, farm_size, config) for slot in date_tuples]
@@ -215,6 +218,9 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
 
     # download data with multiple threads
     data = SentinelHubDownloadClient(config=config).download(list_of_requests, max_threads=5)
+
+    if (isinstance(data[0][0][0], np.ndarray)):
+        data = reshape_data(data, i)
 
     # We are going to download these now as pngs so we don't have to call the api every time,
                                         # only done if createImages variable is True
@@ -245,11 +251,7 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
 
     # print(f"Image shape at {resolution} m resolution: {farm_size} pixels") # Troubleshooting code
 
-    # Creating csv
-
-    create_blank_file(csvpath)
-
-    # I want to do a check here so I don't waste api calls on data I already have
+    # I want to do a check here, so I don't waste api calls on data I already have
     # This will get a list of any expected files that may not be there
 
     # We also need to create our log file, if one doesn't already exist
@@ -257,23 +259,31 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
     if (not os.path.exists(operations_save_path)): # Operation log file doesn't already exist
         create_blank_file(operations_save_path) # Create operation log file if it doesn't already exist
 
-    if (createImages):
-        nonexisting = check_files_exist(date_tuples, operext, sat_image_save_path, preface)
-    else:
-        nonexisting = check_files_exist_in_text_file(date_tuples, operext, operations_save_path, preface, project_name)
+    if (not (type(preface) is list)):
+        preface = [preface]
+        csvpath = [csvpath]
 
-    if (len(nonexisting) == len(date_tuples)):
-        routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface,
-                             farm_coords_wgs84, figure_save_path, csvpath, operext, project_name, request_function, createImages = createImages)
-    elif (len(nonexisting) != 0):
-        flots = []
+    for i in range(len(preface)):
+        # Creating csv
+        create_blank_file(csvpath[i])
 
-        for file_name in nonexisting:
-            date_strings = file_name.split("_")[0:2]
-            start_date, end_date = date_strings
-            flots.append((start_date, end_date))
+        if (createImages):
+            nonexisting = check_files_exist(date_tuples, operext, sat_image_save_path, preface[i])
+        else:
+            nonexisting = check_files_exist_in_text_file(date_tuples, operext, operations_save_path, preface[i], project_name)
 
-        routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, preface,
-                             farm_coords_wgs84, figure_save_path, csvpath, operext, project_name, request_function, createImages = createImages)
-    else:
-        print("All of these files are already downloaded")
+        if (len(nonexisting) == len(date_tuples)):
+            routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface[i],
+                                 farm_coords_wgs84, figure_save_path, csvpath[i], operext, project_name, request_function, createImages = createImages, i=i)
+        elif (len(nonexisting) != 0):
+            flots = []
+
+            for file_name in nonexisting:
+                date_strings = file_name.split("_")[0:2]
+                start_date, end_date = date_strings
+                flots.append((start_date, end_date))
+
+            routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, preface[i],
+                                 farm_coords_wgs84, figure_save_path, csvpath[i], operext, project_name, request_function, createImages = createImages, i=i)
+        else:
+            print("All of these files are already downloaded")
