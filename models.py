@@ -4,9 +4,35 @@
 
 ## Imports
 
-
+from polymer.main import run_atm_corr, Level1, Level2
+from polymer.level1_olci import Level1_OLCI
+from polymer.level2_nc import Level2_NETCDF
+import satFunctions
+import os
 
 ## End of Imports
+
+def chlor_algorithm_apply(path, preface="image", date_tuples=None, project_name='name', folder_name = 'sen', folder_name_out = 'tmp'):
+    tmp = folder_name_out
+
+    for i in range(len(preface)):
+        for j in range(len(date_tuples)):
+
+            folder_name_out = str(date_tuples[j]) + '_' + preface[i] + '_' + project_name + '_' + tmp
+            folder_name_in = str(date_tuples[j]) + '_' + preface[i] + '_' + project_name + '_' + folder_name
+            satFunctions.create_folder(path, folder_name_out)
+
+            # Apply POLYMER
+            run_atm_corr(
+                Level1_OLCI(
+                    folder_name_in[i],
+                    sline=9000, eline=10000),
+                Level2_NETCDF(outdir=os.path.join(path, folder_name_out))
+            )
+
+            # Now we make the outputted .nc file into a .npy with the chlorophyll model applied
+
+            output_nc = satFunctions.load_npy_file(folder_name_out + 'output.nc')
 
 
 def RemoteReflectance():
