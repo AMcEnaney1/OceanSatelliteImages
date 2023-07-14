@@ -20,6 +20,8 @@ useful data for the modeling of shellfish growth.
 
 ## Installation
 
+### My Code
+
 To install you can start by cloning the repository
 
 ```shell
@@ -33,11 +35,23 @@ conda env create -f environment.yml
 conda activate your-environment-name
 ```
 
-To use the various models later on it will likely be required to install code
-from additional places, such as Hygeos for the POLYMER algorithm code.
+### POLYMER
+
+The POLYMER algorithm called be downloaded from 
+[Hygeos](https://www.hygeos.com/polymer). Once downloaded move the 
+polymer folder into the directory of this project and merge the 
+conda environments. Then to make the files navigate back to the polymer 
+directory and run the following commands:
+
+```shell
+make auxdata_all
+make
+```
 
 
 ## Usage
+
+### First Run
 
 Before running the code there are a few things that must be done:
 * Your api keys must be entered into the 'keys.py' file or otherwise configured.
@@ -51,4 +65,20 @@ Before running the code there are a few things that must be done:
 
 Once these are done you can simply run the main function in 'sat.py'.
 
+### Following Runs
 
+The program is written in such a way such that for subsequent runs of
+the code, after the first, so long as the log file remains needless
+api calls will not be made. What this means is if for example you 
+accidentally entered the wrong end date the code could simply be run
+again with the end date moved back, though you may want to delete 
+generated figures first. If you do not want this behavior simply
+delete the log file.
+
+### Modifying requests
+
+If you wish to request new or different bands than what is currently set
+you can add an evalscript to the 'evalscripts.py' file and then add a new 
+request to the 'requestFunctions.py' file. Once this is done make sure to
+add or remove paths set in 'sat.py' as you need before setting the
+resolution and adding the function call. 

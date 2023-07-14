@@ -55,16 +55,8 @@ def main():
 
         csvpath_oxygen2 = []
         oxygen2Preface = []
-
-        for j in range(12):
-            csvpath_oxygen2.append(csvpath_base + projectName[i] + '_' + 's2l2a' + str(j) + '.csv')
-            oxygen2Preface.append('s2l2a' + str(j))
-
-
-        ## End of setting variables ##
-
-        if not config.sh_client_id or not config.sh_client_secret:
-            print("Warning! To use Process API, please provide the credentials (OAuth client ID and client secret).")
+        csvpath_chlorophyll2 = []
+        chlorophyll2Preface = []
 
         ## Setting up farm coordinates
 
@@ -75,6 +67,18 @@ def main():
         end = datetime.datetime(2022, 12, 31)
         n_chunks = 13
         date_tuples = satFunctions.get_timeslots(start, end, n_chunks)
+
+        for j in range(len(date_tuples)): # Use for bulk requests only
+            csvpath_oxygen2.append(csvpath_base + projectName[i] + '_' + 's2l2a' + str(j) + '.csv')
+            oxygen2Preface.append('s2l2a' + str(j))
+            csvpath_oxygen2.append(csvpath_base + projectName[i] + '_' + 'chlor_algo' + str(j) + '.csv')
+            oxygen2Preface.append('chlor_algo' + str(j))
+
+
+        ## End of setting variables ##
+
+        if not config.sh_client_id or not config.sh_client_secret:
+            print("Warning! To use Process API, please provide the credentials (OAuth client ID and client secret).")
 
         # Thermal Data
 
@@ -88,6 +92,16 @@ def main():
                                         # but we can't assume our bbox line up exactly, especially with such a small area
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, chlorophyllPreface, farm_coords_wgs84,
                         figure_save_path, csvpath_chlorophyll, operext, projectName[i], request_function=requestFunctions.get_chlorophyll_request, createImages= createImages[i])
+
+        # A ton of stuff to get chlorophyll in water, from this paper: https://www.sciencedirect.com/science/article/pii/S1569843223000456#b0040
+
+        resolution = 300  # Resolution for all bands from OLCI
+        satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, chlorophyll2Preface,
+                          farm_coords_wgs84,
+                          figure_save_path, csvpath_chlorophyll2, operext, projectName[i],
+                          request_function=requestFunctions.get_chlor_algo_request, createImages=True)
+        # How this chlorophyll band works:
+        # https://sentinels.copernicus.eu/web/sentinel/technical-guides/sentinel-3-olci/level-2/oc4me-chlorophyll
 
         # Sediment Data
 
@@ -113,7 +127,8 @@ def main():
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, oxygen2Preface,
                           farm_coords_wgs84,
                           figure_save_path, csvpath_oxygen2, operext, projectName[i],
-                          request_function=requestFunctions.get_all_s2l2a_request, createImages=createImages[i])
+                          request_function=requestFunctions.get_all_s2l2a_request, createImages=True)
+
 
 
         # Creating plots of data
@@ -126,8 +141,7 @@ def main():
                                     'Average Chlorophyll Concentration', farm_coords_wgs84,
                                     'Average Chlorophyll Concentration vs. Time')
 
-        # How this chlorophyll band works:
-                    # https://sentinels.copernicus.eu/web/sentinel/technical-guides/sentinel-3-olci/level-2/oc4me-chlorophyll
+        # Models, due to computation time, models go  after api calls and figures are made
 
 
 if __name__ == "__main__":

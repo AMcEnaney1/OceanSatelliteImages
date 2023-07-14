@@ -109,3 +109,28 @@ evalscript_all_s2l2a = """
                 sample.B12];
     }
 """
+
+evalscript_chlor_algo = """
+    //VERSION=3
+    function setup() {
+        return {
+            input: [{
+                bands: ["B03","B04","B06","B09","B10"],
+                units: "DN"
+            }],
+            output: {
+                bands: 5,
+                sampleType: "INT16"
+            }
+        };
+    }
+
+    function evaluatePixel(sample) {
+        return [sample.B03,
+                sample.B04,
+                sample.B06,
+                sample.B09,
+                sample.B10
+                ];
+    }
+"""

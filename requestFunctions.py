@@ -90,3 +90,18 @@ def get_all_s2l2a_request(time_interval, farm_bbox, farm_size, config):
         size=farm_size,
         config=config,
 )
+
+def get_chlor_algo_request(time_interval, farm_bbox, farm_size, config):
+    return SentinelHubRequest(
+        evalscript=evalscripts.evalscript_chlor_algo,
+        input_data=[
+            SentinelHubRequest.input_data(
+                data_collection=DataCollection.SENTINEL3_OLCI,
+                time_interval=time_interval,
+            )
+        ],
+        responses=[SentinelHubRequest.output_response("default", MimeType.TIFF)],
+        bbox=farm_bbox,
+        size=farm_size,
+        config=config,
+)

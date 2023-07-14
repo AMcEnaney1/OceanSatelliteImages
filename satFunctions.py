@@ -5,6 +5,9 @@
 
 ## Imports
 
+from polymer.main import run_atm_corr, Level1, Level2
+from polymer.level1_olci import Level1_OLCI
+from polymer.level2_nc import Level2_NETCDF
 import plotFunctions
 from configg import *
 import shutil
@@ -19,8 +22,114 @@ from sentinelhub import (
     SentinelHubDownloadClient,
     bbox_to_dimensions,
 )
+from netCDF4 import Dataset
 
 ## End of Imports
+
+def create_folder(path, folder_name):
+    # Combine the path and folder name
+    folder_path = os.path.join(path, folder_name)
+
+    # Check if the folder already exists
+    if not os.path.exists(folder_path):
+        # Create the folder
+        os.makedirs(folder_path)
+        print(f"Folder '{folder_name}' created at '{folder_path}'")
+    else:
+        print(f"Folder '{folder_name}' already exists at '{folder_path}'")
+
+
+def chlor_algorithm_apply(path, preface="image", date_tuples=None, project_name='name', folder_name = 'sen', folder_name_out = 'tmp'):
+    tmp = folder_name_out
+
+    for i in range(len(preface)):
+        for j in range(len(date_tuples)):
+
+            folder_name_out = str(date_tuples[j]) + '_' + preface[i] + '_' + project_name + '_' + tmp
+            folder_name_in = str(date_tuples[j]) + '_' + preface[i] + '_' + project_name + '_' + folder_name
+            create_folder(path, folder_name_out)
+
+            # Apply POLYMER
+            run_atm_corr(
+                Level1_OLCI(
+                    folder_name_in[i],
+                    sline=9000, eline=10000),
+                Level2_NETCDF(outdir=os.path.join(path, folder_name_out))
+            )
+
+            # Now we make the outputted .nc file into a .npy with the chlorophyll model applied
+
+            output_nc = load_npy_file(folder_name_out + 'output.nc')
+
+
+def convert_all_npy_and_nc(path, preface="image", date_tuples=None, project_name='name', folder_name = 'sen'):
+
+    for i in range(len(date_tuples)):
+        tmp = str(date_tuples[i]) + '_' + preface + '_' + project_name + '_' + folder_name
+        create_folder(path, tmp)
+
+        path2 = path + tmp
+
+        # Generate the filename
+        filename = f"{preface}_{i}."
+        if date_tuples and i < len(date_tuples) and len(date_tuples[i]) == 2:
+            date_str_1 = date_tuples[i][0]
+            date_str_2 = date_tuples[i][1]
+            filename = f"{date_str_1}_{date_str_2}_{filename}"
+
+        filename = project_name + '_' + filename
+
+        # Save the ndarray as .npy file
+        full_filename1 = os.path.join(path, filename)
+        full_filename2 = os.path.join(path2, filename)
+        convert_npy_to_nc(full_filename1 + 'npy', full_filename2 + 'nc')
+
+def convert_npy_to_nc(npy_path, download_path):
+    # Load npy file
+    np_array = load_npy_file(npy_path)
+
+    # Create netCDF file
+    nc_file = Dataset(download_path, 'w', format='NETCDF4')
+
+    # Create dimensions based on np_array shape
+    for dim_idx, dim_size in enumerate(np_array.shape):
+        nc_file.createDimension(f'dim_{dim_idx}', dim_size)
+
+    # Create variable with the same shape as np_array
+    nc_var = nc_file.createVariable('data', np_array.dtype, tuple(f'dim_{i}' for i in range(np_array.ndim)))
+
+    # Assign data from np_array to the variable
+    nc_var[:] = np_array[:]
+
+    # Close the netCDF file
+    nc_file.close()
+
+def convert_nc_to_npy(nc_path, download_path):
+    # Open the netCDF file
+    nc_file = Dataset(nc_path, 'r')
+
+    # Get the variable
+    nc_var = nc_file.variables['data']
+
+    # Read the variable data
+    np_array = np.array(nc_var[:])
+
+    # Save the data as .npy file
+    np.save(download_path, np_array)
+
+    # Close the netCDF file
+    nc_file.close()
+
+def load_npy_file(file_path):
+    try:
+        array = np.load(file_path)
+        return array
+    except FileNotFoundError:
+        print(f"Error: File '{file_path}' not found.")
+    except ValueError:
+        print(f"Error: Unable to load file '{file_path}'. Verify it is a valid .npy file.")
+    except Exception as e:
+        print(f"Error: An error occurred while loading file '{file_path}': {str(e)}")
 
 def kelvin_to_fahrenheit(kelvin):
     fahrenheit = (kelvin - 273.15) * 9/5 + 32
@@ -32,7 +141,6 @@ def get_timeslots(start, end, n_chunks):
     date_tuples = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
 
     return date_tuples
-
 
 def create_blank_file(filename):
     _, file_extension = os.path.splitext(filename)
@@ -210,7 +318,7 @@ def reshape_data(data, p):
     return reshaped_data
 
 def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
-            figure_save_path, csvpath, operext, project_name, request_function, createImages = False, i=0):
+            figure_save_path, csvpath, operext, project_name, request_function, createImages = False, i=0, as_nc = False):
 
     # create a list of requests
     list_of_requests = [request_function(slot, farm_bbox, farm_size, config) for slot in date_tuples]
@@ -223,10 +331,13 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
         data = reshape_data(data, i)
 
     # We are going to download these now as pngs so we don't have to call the api every time,
-                                        # only done if createImages variable is True
-    if (createImages):
+                                        # only done if createImages variable is True, or as_nc is True
+    if (createImages or as_nc):
         save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
         save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
+
+    if (as_nc):
+        convert_all_npy_and_nc(sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
 
     # Now we create a text file with the data we have so we don't waste api calls if we are just filling data
     populate_text_file(date_tuples, operext, operations_save_path, preface, project_name)
@@ -242,7 +353,7 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
     sort_csv_by_date(csvpath) # We do this here instead of in the write so its more efficient and can be moved
 
 def core(resolution, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
-            figure_save_path, csvpath, operext, project_name, request_function, createImages = False):
+            figure_save_path, csvpath, operext, project_name, request_function, createImages = False, as_nc = False):
 
     # Setting up resolution and stuff
 
@@ -274,7 +385,8 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
 
         if (len(nonexisting) == len(date_tuples)):
             routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface[i],
-                                 farm_coords_wgs84, figure_save_path, csvpath[i], operext, project_name, request_function, createImages = createImages, i=i)
+                                farm_coords_wgs84, figure_save_path, csvpath[i], operext, project_name,
+                                request_function, createImages = createImages, i=i, as_nc = as_nc)
         elif (len(nonexisting) != 0):
             flots = []
 
@@ -284,6 +396,7 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
                 flots.append((start_date, end_date))
 
             routine(farm_bbox, farm_size, flots, sat_image_save_path, operations_save_path, preface[i],
-                                 farm_coords_wgs84, figure_save_path, csvpath[i], operext, project_name, request_function, createImages = createImages, i=i)
+                                farm_coords_wgs84, figure_save_path, csvpath[i], operext, project_name,
+                                request_function, createImages = createImages, i=i, as_nc = as_nc)
         else:
             print("All of these files are already downloaded")
