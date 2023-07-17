@@ -116,11 +116,11 @@ evalscript_chlor_algo = """
         return {
             input: [{
                 bands: ["B03","B04","B06","B09","B10"],
-                units: "DN"
+                units: "REFLECTANCE"
             }],
             output: {
                 bands: 5,
-                sampleType: "INT16"
+                sampleType: "UINT16"
             }
         };
     }

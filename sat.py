@@ -71,8 +71,8 @@ def main():
         for j in range(len(date_tuples)): # Use for bulk requests only
             csvpath_oxygen2.append(csvpath_base + projectName[i] + '_' + 's2l2a' + str(j) + '.csv')
             oxygen2Preface.append('s2l2a' + str(j))
-            csvpath_oxygen2.append(csvpath_base + projectName[i] + '_' + 'chlor_algo' + str(j) + '.csv')
-            oxygen2Preface.append('chlor_algo' + str(j))
+            csvpath_chlorophyll2.append(csvpath_base + projectName[i] + '_' + 'chlor_algo' + str(j) + '.csv')
+            chlorophyll2Preface.append('chlor_algo' + str(j))
 
 
         ## End of setting variables ##

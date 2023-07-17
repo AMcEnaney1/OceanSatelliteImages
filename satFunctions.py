@@ -19,6 +19,7 @@ from sentinelhub import (
     SentinelHubDownloadClient,
     bbox_to_dimensions,
 )
+import netCDF4 as nc
 from netCDF4 import Dataset
 
 ## End of Imports
