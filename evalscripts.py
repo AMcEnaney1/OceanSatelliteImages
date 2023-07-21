@@ -120,7 +120,7 @@ evalscript_chlor_algo = """
             }],
             output: {
                 bands: 5,
-                sampleType: "UINT16"
+                sampleType: "UINT8"
             }
         };
     }
@@ -130,7 +130,6 @@ evalscript_chlor_algo = """
                 sample.B04,
                 sample.B06,
                 sample.B09,
-                sample.B10
-                ];
+                sample.B10];
     }
 """

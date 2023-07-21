@@ -10,7 +10,6 @@ from configg import *
 import shutil
 import numpy as np
 from PIL import Image
-from datetime import datetime
 import os
 import csv
 from sentinelhub import (
@@ -19,10 +18,44 @@ from sentinelhub import (
     SentinelHubDownloadClient,
     bbox_to_dimensions,
 )
-import netCDF4 as nc
 from netCDF4 import Dataset
+from sentinelsat import geojson_to_wkt
+from datetime import datetime
+import zipfile
 
 ## End of Imports
+
+def unzip_all_zip_files(directory):
+    # Iterate through all the files in the directory
+    for filename in os.listdir(directory):
+        filepath = os.path.join(directory, filename)
+
+        # Check if the current item is a zip file
+        if filename.lower().endswith(".zip"):
+            # Create a ZipFile object and extract its contents
+            with zipfile.ZipFile(filepath, 'r') as zip_ref:
+                zip_ref.extractall(directory)
+
+            # Remove the original zip file if desired (optional)
+            # os.remove(filepath)
+
+
+def move_elements_down_one(input_list):
+    new_list = [''] + input_list[:-1]
+    return new_list
+
+def bbox_to_WKT(bbox): # Converts a bounding box to well-known text representation form
+    # https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+    # bbox is read in as a tuple, not a SentinelHub bbox type
+
+    wkt_bbox = geojson_to_wkt({'type': 'Polygon', 'coordinates': [[
+        [bbox[0], bbox[1]],
+        [bbox[0], bbox[3]],
+        [bbox[2], bbox[3]],
+        [bbox[2], bbox[1]],
+        [bbox[0], bbox[1]]]]})
+
+    return wkt_bbox
 
 def create_folder(path, folder_name):
     # Combine the path and folder name

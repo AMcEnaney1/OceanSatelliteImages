@@ -48,8 +48,27 @@ make auxdata_all
 make
 ```
 
+Then, as above create the conda environment included with POLYMER.
 
 ## Usage
+
+### Bash Script
+
+To run the bash script, 'manage.py' first make sure your bash environment
+is set up to run conda commands, do this with the following command:
+
+```shell
+conda init
+```
+
+Then go into the bash script and change the conda environment names to 
+their actual names. You then need to give permission to the bash script
+and run it:
+
+```shell
+chmod +x manage.sh
+./manage.py
+```
 
 ### First Run
 
@@ -63,7 +82,8 @@ Before running the code there are a few things that must be done:
   bbox/project.
   * The start, end and n_chunks variables must be changed to what is desired.
 
-Once these are done you can simply run the main function in 'sat.py'.
+Once these are done you can simply run the main function in 'sat.py', or
+if using models run using the bash script.
 
 ### Following Runs
 

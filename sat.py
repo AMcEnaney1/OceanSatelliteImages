@@ -17,8 +17,10 @@
 import satFunctions
 import plotFunctions
 import requestFunctions
+import models
 from configg import *
 import datetime
+import os
 
 ## End of Imports
 
@@ -58,21 +60,28 @@ def main():
         csvpath_chlorophyll2 = []
         chlorophyll2Preface = []
 
+        for j in range(12): # Use for bulk requests only
+            csvpath_oxygen2.append(csvpath_base + projectName[i] + '_' + 's2l2a' + str(j) + '.csv')
+            oxygen2Preface.append('s2l2a' + str(j))
+
+        for j in range(5):
+            csvpath_chlorophyll2.append(csvpath_base + projectName[i] + '_' + 'chlor_algo' + str(j) + '.csv')
+            chlorophyll2Preface.append('chlor_algo' + str(j))
+
+        chlorPoly_save_path1 = 'polymer-v4.16.1'
+        chlorPoly_save_path2 = 'chlorPoly'
+        chlorPoly_save_path3 = os.path.join(chlorPoly_save_path2, projectName[i])
+        chlorPoly_save_path = os.path.join(chlorPoly_save_path1, chlorPoly_save_path2)
+
         ## Setting up farm coordinates
 
         farm_coords_wgs84 = coordinates[i]
 
         # Setting up start and end date as well as the amount of snapshots
-        start = datetime.datetime(2022, 1, 1)
-        end = datetime.datetime(2022, 12, 31)
-        n_chunks = 13
+        start = datetime.datetime(2023, 6, 1)
+        end = datetime.datetime(2023, 7, 20)
+        n_chunks = 3
         date_tuples = satFunctions.get_timeslots(start, end, n_chunks)
-
-        for j in range(len(date_tuples)): # Use for bulk requests only
-            csvpath_oxygen2.append(csvpath_base + projectName[i] + '_' + 's2l2a' + str(j) + '.csv')
-            oxygen2Preface.append('s2l2a' + str(j))
-            csvpath_chlorophyll2.append(csvpath_base + projectName[i] + '_' + 'chlor_algo' + str(j) + '.csv')
-            chlorophyll2Preface.append('chlor_algo' + str(j))
 
 
         ## End of setting variables ##
@@ -93,15 +102,6 @@ def main():
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, chlorophyllPreface, farm_coords_wgs84,
                         figure_save_path, csvpath_chlorophyll, operext, projectName[i], request_function=requestFunctions.get_chlorophyll_request, createImages= createImages[i])
 
-        # A ton of stuff to get chlorophyll in water, from this paper: https://www.sciencedirect.com/science/article/pii/S1569843223000456#b0040
-
-        resolution = 300  # Resolution for all bands from OLCI
-        satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, chlorophyll2Preface,
-                          farm_coords_wgs84,
-                          figure_save_path, csvpath_chlorophyll2, operext, projectName[i],
-                          request_function=requestFunctions.get_chlor_algo_request, createImages=True)
-        # How this chlorophyll band works:
-        # https://sentinels.copernicus.eu/web/sentinel/technical-guides/sentinel-3-olci/level-2/oc4me-chlorophyll
 
         # Sediment Data
 
@@ -129,6 +129,16 @@ def main():
                           figure_save_path, csvpath_oxygen2, operext, projectName[i],
                           request_function=requestFunctions.get_all_s2l2a_request, createImages=True)
 
+        # A ton of stuff to get chlorophyll in water, from this paper: https://www.sciencedirect.com/science/article/pii/S1569843223000456#b0040
+
+        resolution = 300  # Resolution for all bands from OLCI
+        satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, chlorophyll2Preface,
+                          farm_coords_wgs84,
+                          figure_save_path, csvpath_chlorophyll2, operext, projectName[i],
+                          request_function=requestFunctions.get_chlor_algo_request, createImages=True)
+        # How this chlorophyll band works:
+        # https://sentinels.copernicus.eu/web/sentinel/technical-guides/sentinel-3-olci/level-2/oc4me-chlorophyll
+
 
 
         # Creating plots of data
@@ -141,8 +151,11 @@ def main():
                                     'Average Chlorophyll Concentration', farm_coords_wgs84,
                                     'Average Chlorophyll Concentration vs. Time')
 
-        # Models, due to computation time, models go  after api calls and figures are made
+        # Models, due to computation time models go  after api calls and figures are made
 
+        models.chlor(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path)
+
+        return chlorPoly_save_path3
 
 if __name__ == "__main__":
     main()
