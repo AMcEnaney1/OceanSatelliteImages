@@ -40,3 +40,9 @@ for folder in $poly_dir*; do
     ./polymer_cli.py "$folder_name" "$output_file_name" # Execute the script with folder name and output file name
 done
 conda deactivate
+
+conda activate sent
+
+python3 sat.py -c "convert()"
+
+conda deactivate

@@ -27,15 +27,20 @@ import glob
 
 ## End of Imports
 
-def delete_all_zip_files(directory):
-    # Iterate through all the files in the directory
-    for filename in os.listdir(directory):
-        filepath = os.path.join(directory, filename)
+def calculate_and_save_result(npy_files, float_list, name):
+    if len(float_list) != len(npy_files) + 1:
+        raise ValueError("The length of float_list should be one more than the number of npy_files.")
 
-        # Check if the current item is a zip file
-        if filename.lower().endswith(".zip"):
-            # Remove the zip file
-            os.remove(filepath)
+    # Read the data from each .npy file and store it in a list
+    npy_data = [np.load(file_path) for file_path in npy_files]
+
+    # Perform the calculations
+    result = float_list[0]
+    for i in range(len(npy_data)):
+        result += float_list[i+1] * npy_data[i]
+
+    # Save the result to a new .npy file
+    np.save(name + '.npy', result)
 
 def unzip_all_zip_files(directory):
     # Iterate through all the files in the directory
@@ -49,7 +54,7 @@ def unzip_all_zip_files(directory):
                 zip_ref.extractall(directory)
 
             # Remove the original zip file if desired (optional)
-            # os.remove(filepath)
+            os.remove(filepath)
 
 
 def move_elements_down_one(input_list):
@@ -133,44 +138,45 @@ def process_directory(directory, save_to = None):
         # Call the 'convert_nc_to_npy' function for each .nc file found
         convert_nc_to_npy(nc_file, save_to)
 
-def convert_nc_to_npy(nc_file_path, save_to = None):
+def convert_nc_to_npy(nc_file_path, save_to=None):
 
-    # Open the NetCDF file
-    dataset = nc.Dataset(nc_file_path)
+    try:
+        # Open the NetCDF file
+        dataset = nc.Dataset(nc_file_path)
 
-    for variable_name in list(dataset.variables.keys()): # Loops through possible variables
+        for variable_name in list(dataset.variables.keys()):
+            try:
+                # Check if the variable_name exists in the NetCDF file
+                if variable_name not in dataset.variables:
+                    print("Variable not found in the NetCDF file:", variable_name)
+                    continue  # Skip to the next variable
 
-        try:
-            # Check if the variable_name exists in the NetCDF file
-            if variable_name not in dataset.variables:
-                print("Variable not found in the NetCDF file:", variable_name)
-                dataset.close()
-                return  # Return or continue depending on your requirement
+                if isinstance(save_to, str) and save_to is not None:
+                    parts = nc_file_path.split('/')
+                    parts[-3] = save_to
+                    npy_file_path1 = '/'.join(parts)
+                else:
+                    npy_file_path1 = nc_file_path
 
-            if isinstance(save_to, str) and save_to is not None:
-                parts = nc_file_path.split('/')
-                parts[-3] = save_to
-                npy_file_path1 = '/'.join(parts)
+                npy_file_path = remove_file_extension(npy_file_path1) + str(variable_name)
 
-            else:
-                npy_file_path1 = nc_file_path
+                # Read the data from the NetCDF file
+                data = dataset.variables[variable_name][:]
 
-            npy_file_path = remove_file_extension(npy_file_path1) + str(variable_name)
+                # Convert the data to NumPy array
+                np_data = np.array(data)
 
-            # Read the data from the NetCDF file
-            data = dataset.variables[variable_name][:]
+                # Save the NumPy array to an npy file
+                np.save(npy_file_path, np_data)
 
-            # Convert the data to NumPy array
-            np_data = np.array(data)
+            except Exception as e:
+                print("An error occurred while processing variable", variable_name, ":", e)
 
-            # Save the NumPy array to a npy file
-            np.save(npy_file_path, np_data)
+        # Close the NetCDF file outside the loop
+        dataset.close()
 
-            # Close the NetCDF file
-            dataset.close()
-
-        except Exception as e:
-            print("An error occurred:", e)
+    except Exception as e:
+        print("An error occurred:", e)
 
 def load_npy_file(file_path):
     try:

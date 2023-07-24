@@ -36,15 +36,16 @@ def main():
     projectName = ['MaxFarm'] # These will be prefixes in the relevant files
     coordinates = [(-69.9040, 43.8586, -69.8987, 43.8651)]
     createImages = [False]
+    outputs_folder = 'out'
 
 
     for i in range(len(projectName)):
         operext = '.npy'
         operations_txt_filename = projectName[i] + '_oper.txt'
-        csvpath_base = 'out/data/' + projectName[i] + '_compData'
-        figure_save_path = 'out/figures/'
-        sat_image_save_path = 'out/satData/images/'
-        operations_save_path = 'out/satData/logs/' + operations_txt_filename
+        csvpath_base = os.path.join(outputs_folder, 'data', '') + projectName[i] + '_compData'
+        figure_save_path = os.path.join(outputs_folder, 'figures', '')
+        sat_image_save_path = os.path.join(outputs_folder, 'satData', 'images', '')
+        operations_save_path = os.path.join(outputs_folder, 'satData', 'logs', '') + operations_txt_filename
 
         csvpath_thermal = csvpath_base + projectName[i] + '_Thermal.csv'
         thermalPreface = 'Thermal'
@@ -69,7 +70,7 @@ def main():
             chlorophyll2Preface.append('chlor_algo' + str(j))
 
         chlorPoly_save_path1 = 'polymer-v4.16.1'
-        chlorPoly_save_path2 = 'chlorPoly'
+        chlorPoly_save_path2 = os.path.join(outputs_folder, 'chlorPoly', '')
         poly_dir = os.path.join(chlorPoly_save_path2, projectName[i])
         chlorPoly_save_path = os.path.join(chlorPoly_save_path1, chlorPoly_save_path2)
 
@@ -78,9 +79,9 @@ def main():
         farm_coords_wgs84 = coordinates[i]
 
         # Setting up start and end date as well as the amount of snapshots
-        start = datetime.datetime(2023, 6, 1)
-        end = datetime.datetime(2023, 7, 20)
-        n_chunks = 2
+        start = datetime.datetime(2022, 7, 1)
+        end = datetime.datetime(2023, 7, 30)
+        n_chunks = 13
         date_tuples = satFunctions.get_timeslots(start, end, n_chunks)
 
 
@@ -91,7 +92,7 @@ def main():
 
         # Thermal Data
 
-        """resolution = 30  # Resolution for thermal images
+        resolution = 30  # Resolution for thermal images
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, thermalPreface, farm_coords_wgs84,
                         figure_save_path, csvpath_thermal, operext, projectName[i], request_function=requestFunctions.get_thermal_request, createImages= createImages[i])
 
@@ -149,14 +150,23 @@ def main():
                                     farm_coords_wgs84, 'Average Temperature vs. Time', fah=True)
         plotFunctions.plot_csv_data(csvpath_chlorophyll, figure_save_path, 'Average',
                                     'Average Chlorophyll Concentration', farm_coords_wgs84,
-                                    'Average Chlorophyll Concentration vs. Time') """
+                                    'Average Chlorophyll Concentration vs. Time')
 
         # Models, due to computation time models go  after api calls and figures are made
 
         models.chlor(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, npy_save_to=True)
 
         with open('shell_input.txt', "w") as file:
-            file.write(poly_dir)
+            file.write(poly_dir) # Writing as a text file for bash script to use
+
+def convert():
+    with open('process_input.txt', 'r') as file:
+        tmp_ = file.readline().strip()
+        npy_save_to = file.readline().strip()
+
+    satFunctions.process_directory(tmp_, npy_save_to)  # Converts all of these .nc files into .npy files
+
+
 
 if __name__ == "__main__":
     main()

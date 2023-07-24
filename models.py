@@ -58,43 +58,23 @@ def chlor(bbox, date_tuples, project_name, path, npy_save_to = None):
         # Use the download_path parameter to specify the download directory
         api.download_all(products, directory_path=download_directory)
 
-    satFunctions.unzip_all_zip_files(tmp_) # Unzips all the folders, so we have folders of .nc files
-    satFunctions.delete_all_zip_files(tmp_)  # Deletes all of the zip folders
-    #satFunctions.process_directory(tmp_, npy_save_to) # Converts all of these .nc files into .npy files
+    satFunctions.unzip_all_zip_files(tmp_) # Unzips all the folders, so we have folders of .nc files, also deletes zips
 
+    with open('process_input.txt', "w") as file: # Saving to pass to process_directory() later
+        file.write(tmp_ + '\n')
+        file.write(npy_save_to)
 
-def RemoteReflectance():
-    # Atmospheric Correction algorithm
-    # Calculates water reflectance, used to get chlorophyll-a. This is the POLYMER algorithm.
-    # This algorithm came from here: https://opg.optica.org/oe/fulltext.cfm?uri=oe-19-10-9783&id=213648
-    # And was used to get chlorophyll-a in this paper: https://www.sciencedirect.com/science/article/pii/S1569843223000456#b0190
-
-
-
-    return 0
-
-def chlorophyll(arr):
+def chlorophyll(paths):
     # Algorithm to get chlorophyll-a, from this paper:
     # https://www.sciencedirect.com/science/article/pii/S1569843223000456#b0040
 
     # Defining regression coefficients
-    B0 = 0.761
-    B1 = 0.3495
-    B2 = -1.512
-    B3 = 1.925
-    B4 = -9.0585
-    B5 = 8.4015
+    vals = []
+    vals.append(0.761)
+    vals.append(0.3495)
+    vals.append(-1.512)
+    vals.append(1.925)
+    vals.append(-9.0585)
+    vals.append(8.4015)
 
-
-    ### Needs to be finished
-
-    # Defining reflectance values
-    R1 = RemoteReflectance()
-    R2 = RemoteReflectance()
-    R3 = RemoteReflectance()
-    R4 = RemoteReflectance()
-    R5 = RemoteReflectance()
-
-    val = B0 + (B1 * R1) + (B2 * R2) + (B3 * R3) + (B4 * R4) + (B5 * R5)
-
-    return val
+    satFunctions.calculate_and_save_result(paths, vals, 'chlorAlg')
