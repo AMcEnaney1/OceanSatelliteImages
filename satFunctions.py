@@ -18,12 +18,24 @@ from sentinelhub import (
     SentinelHubDownloadClient,
     bbox_to_dimensions,
 )
+import netCDF4 as nc
 from netCDF4 import Dataset
 from sentinelsat import geojson_to_wkt
 from datetime import datetime
 import zipfile
+import glob
 
 ## End of Imports
+
+def delete_all_zip_files(directory):
+    # Iterate through all the files in the directory
+    for filename in os.listdir(directory):
+        filepath = os.path.join(directory, filename)
+
+        # Check if the current item is a zip file
+        if filename.lower().endswith(".zip"):
+            # Remove the zip file
+            os.remove(filepath)
 
 def unzip_all_zip_files(directory):
     # Iterate through all the files in the directory
@@ -112,21 +124,53 @@ def convert_npy_to_nc(npy_path, download_path):
     # Close the netCDF file
     nc_file.close()
 
-def convert_nc_to_npy(nc_path, download_path):
-    # Open the netCDF file
-    nc_file = Dataset(nc_path, 'r')
+def process_directory(directory, save_to = None):
 
-    # Get the variable
-    nc_var = nc_file.variables['data']
+    # Get a list of all files with the '.nc' extension in the specified directory and its subdirectories
+    nc_files = glob.glob(os.path.join(directory, '**', '*.nc'), recursive=True)
 
-    # Read the variable data
-    np_array = np.array(nc_var[:])
+    for nc_file in nc_files:
+        # Call the 'convert_nc_to_npy' function for each .nc file found
+        convert_nc_to_npy(nc_file, save_to)
 
-    # Save the data as .npy file
-    np.save(download_path, np_array)
+def convert_nc_to_npy(nc_file_path, save_to = None):
 
-    # Close the netCDF file
-    nc_file.close()
+    # Open the NetCDF file
+    dataset = nc.Dataset(nc_file_path)
+
+    for variable_name in list(dataset.variables.keys()): # Loops through possible variables
+
+        try:
+            # Check if the variable_name exists in the NetCDF file
+            if variable_name not in dataset.variables:
+                print("Variable not found in the NetCDF file:", variable_name)
+                dataset.close()
+                return  # Return or continue depending on your requirement
+
+            if isinstance(save_to, str) and save_to is not None:
+                parts = nc_file_path.split('/')
+                parts[-3] = save_to
+                npy_file_path1 = '/'.join(parts)
+
+            else:
+                npy_file_path1 = nc_file_path
+
+            npy_file_path = remove_file_extension(npy_file_path1) + str(variable_name)
+
+            # Read the data from the NetCDF file
+            data = dataset.variables[variable_name][:]
+
+            # Convert the data to NumPy array
+            np_data = np.array(data)
+
+            # Save the NumPy array to a npy file
+            np.save(npy_file_path, np_data)
+
+            # Close the NetCDF file
+            dataset.close()
+
+        except Exception as e:
+            print("An error occurred:", e)
 
 def load_npy_file(file_path):
     try:
@@ -138,6 +182,10 @@ def load_npy_file(file_path):
         print(f"Error: Unable to load file '{file_path}'. Verify it is a valid .npy file.")
     except Exception as e:
         print(f"Error: An error occurred while loading file '{file_path}': {str(e)}")
+
+def remove_file_extension(file_path):
+    filename, file_extension = os.path.splitext(file_path)
+    return filename
 
 def kelvin_to_fahrenheit(kelvin):
     fahrenheit = (kelvin - 273.15) * 9/5 + 32

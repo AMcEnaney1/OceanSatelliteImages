@@ -70,7 +70,7 @@ def main():
 
         chlorPoly_save_path1 = 'polymer-v4.16.1'
         chlorPoly_save_path2 = 'chlorPoly'
-        chlorPoly_save_path3 = os.path.join(chlorPoly_save_path2, projectName[i])
+        poly_dir = os.path.join(chlorPoly_save_path2, projectName[i])
         chlorPoly_save_path = os.path.join(chlorPoly_save_path1, chlorPoly_save_path2)
 
         ## Setting up farm coordinates
@@ -80,7 +80,7 @@ def main():
         # Setting up start and end date as well as the amount of snapshots
         start = datetime.datetime(2023, 6, 1)
         end = datetime.datetime(2023, 7, 20)
-        n_chunks = 3
+        n_chunks = 2
         date_tuples = satFunctions.get_timeslots(start, end, n_chunks)
 
 
@@ -91,7 +91,7 @@ def main():
 
         # Thermal Data
 
-        resolution = 30  # Resolution for thermal images
+        """resolution = 30  # Resolution for thermal images
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path, thermalPreface, farm_coords_wgs84,
                         figure_save_path, csvpath_thermal, operext, projectName[i], request_function=requestFunctions.get_thermal_request, createImages= createImages[i])
 
@@ -149,13 +149,14 @@ def main():
                                     farm_coords_wgs84, 'Average Temperature vs. Time', fah=True)
         plotFunctions.plot_csv_data(csvpath_chlorophyll, figure_save_path, 'Average',
                                     'Average Chlorophyll Concentration', farm_coords_wgs84,
-                                    'Average Chlorophyll Concentration vs. Time')
+                                    'Average Chlorophyll Concentration vs. Time') """
 
         # Models, due to computation time models go  after api calls and figures are made
 
-        models.chlor(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path)
+        models.chlor(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, npy_save_to=True)
 
-        return chlorPoly_save_path3
+        with open('shell_input.txt', "w") as file:
+            file.write(poly_dir)
 
 if __name__ == "__main__":
     main()

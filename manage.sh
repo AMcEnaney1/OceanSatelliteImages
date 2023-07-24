@@ -1,12 +1,16 @@
 #!/bin/bash
 
-
 # Activate the Conda environment for sat.py
 source /Users/aidan/mambaforge/etc/profile.d/conda.sh
 conda activate sent
 
-# Run main() in sat.py and store the returned directory in a variable
-poly_dir=$(python3 -c 'from sat import main; print(main())')
+# Call the Python script and the function using the `python3` command
+python3 sat.py -c "main()"
+
+poly_dir=$(cat "shell_input.txt")
+rm shell_input.txt
+
+echo "Passed folder: $poly_dir"
 
 # Add '/' character to the end of poly_dir
 poly_dir+="/"
@@ -17,34 +21,22 @@ conda deactivate
 pol_dir="polymer-v4.16.1/"
 cd "$pol_dir"
 
-# Check if the folder doesn't already exist
-if [ ! -d "$poly_dir" ]; then
-    # If the folder doesn't exist, create it
-    mkdir "$poly_dir"
-    echo "Folder '$poly_dir' created successfully!"
-else
-    echo "Folder '$poly_dir' already exists. Skipping folder creation."
-fi
-
-# Move into the polymer directory
-#cd "$poly_dir"
-
 pwd
+
+# Function to get the deepest folder name with '.nc' attached
+get_output_file_name() {
+    local path="$1"
+    local deepest_folder=$(basename "$path")
+    echo "${deepest_folder}.nc"
+}
 
 conda activate sentPoly
 
-# Loop through all subdirectories (input folders) in poly_dir
-find "$poly_dir" -type d -print0 | while IFS= read -r -d '' input_folder; do
-  # Trim the trailing slash from the folder name to get the basename
-  input_folder_name=$(basename "$input_folder")
-
-  # Output file name with .nc extension
-  output_file="$input_folder_name.nc"
-
-  # Call polymer_cli.py script from /polymer-v4.16.1 directory with input folder and output file as arguments
-  ./polymer_cli.py "$input_folder" "$output_file"
+for folder in $poly_dir*; do
+    folder_name=$(basename "$folder")  # Get the folder name from the path
+    output_file_name=$(get_output_file_name "$folder_name")
+    folder_name="${poly_dir}${folder_name}"
+    echo "Processing folder: $folder_name"
+    ./polymer_cli.py "$folder_name" "$output_file_name" # Execute the script with folder name and output file name
 done
-
 conda deactivate
-
-

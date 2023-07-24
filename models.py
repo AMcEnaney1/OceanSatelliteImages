@@ -12,7 +12,11 @@ import os
 
 ## End of Imports
 
-def chlor(bbox, date_tuples, project_name, path):
+def chlor(bbox, date_tuples, project_name, path, npy_save_to = None):
+
+    if (npy_save_to == True): # Default folder for npy files, this is so POLYMER doesnt get upset
+        npy_save_to = project_name + 'npyFiles'
+
     tmp_ = os.path.join(path, project_name)
     tmp = tmp_.split('/')
     tmp = satFunctions.move_elements_down_one(tmp)
@@ -54,7 +58,9 @@ def chlor(bbox, date_tuples, project_name, path):
         # Use the download_path parameter to specify the download directory
         api.download_all(products, directory_path=download_directory)
 
-    satFunctions.unzip_all_zip_files(tmp_)
+    satFunctions.unzip_all_zip_files(tmp_) # Unzips all the folders, so we have folders of .nc files
+    satFunctions.delete_all_zip_files(tmp_)  # Deletes all of the zip folders
+    #satFunctions.process_directory(tmp_, npy_save_to) # Converts all of these .nc files into .npy files
 
 
 def RemoteReflectance():
