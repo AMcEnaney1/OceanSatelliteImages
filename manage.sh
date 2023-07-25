@@ -5,7 +5,7 @@ source /Users/aidan/mambaforge/etc/profile.d/conda.sh
 conda activate sent
 
 # Call the Python script and the function using the `python3` command
-python3 sat.py -c "main()"
+python3 -c "import sat; sat.main()"
 
 poly_dir=$(cat "shell_input.txt")
 rm shell_input.txt
@@ -20,8 +20,6 @@ conda deactivate
 
 pol_dir="polymer-v4.16.1/"
 cd "$pol_dir"
-
-pwd
 
 # Function to get the deepest folder name with '.nc' attached
 get_output_file_name() {
@@ -43,6 +41,7 @@ conda deactivate
 
 conda activate sent
 
-python3 sat.py -c "convert()"
+cd .. # Move back one directory to call function from sat.py again
+python3 -c "import sat; sat.convert()"
 
 conda deactivate

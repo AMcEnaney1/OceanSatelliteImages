@@ -8,6 +8,7 @@ shellfish growth model.
 - [About](#about)
 - [Installation](#installation)
 - [Usage](#usage)
+- [TODO](#todo)
 
 ## About
 
@@ -122,3 +123,30 @@ you can add an evalscript to the 'evalscripts.py' file and then add a new
 request to the 'requestFunctions.py' file. Once this is done make sure to
 add or remove paths set in 'sat.py' as you need before setting the
 resolution and adding the function call. 
+
+## TODO
+
+### POLYMER
+
+* Need to get Ancillary data.
+
+### Models (Not all Possible)
+
+* POM (Particulate Organic Matter)
+* POC (Particulate Organic Carbon)
+* Ocean Salinity
+* Dissolved Oxygen
+* Aerial Exposure (fraction of days exposed to air)
+* TPM (Total Particulate Mass)
+* PIM (Particulate Inorganic Mass)
+
+### Cleanup
+
+* Move all inputs to one python file.
+* Clean up io operations in bash script. (Can just read from new inputs.py)
+* Create more bash scripts for various uses.
+* Fix chlorPoly path, currently dependent on code in models.py, this should not be the case.
+* Fix convert_nc_to_npy() so that save folders don't have to be exclusively deeper.
+* Make script to run POLYMER aside from included polymer_cli.py
+* remove_overlap() needs to be changed so order is fixed for any length,
+not just length 1 or 2.

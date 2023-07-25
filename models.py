@@ -12,10 +12,10 @@ import os
 
 ## End of Imports
 
-def chlor(bbox, date_tuples, project_name, path, npy_save_to = None):
+def chlor(bbox, date_tuples, project_name, path, npy_save_to=None):
 
     if (npy_save_to == True): # Default folder for npy files, this is so POLYMER doesnt get upset
-        npy_save_to = project_name + 'npyFiles'
+        npy_save_to = project_name + '_' + 'npyFiles'
 
     tmp_ = os.path.join(path, project_name)
     tmp = tmp_.split('/')
@@ -62,11 +62,15 @@ def chlor(bbox, date_tuples, project_name, path, npy_save_to = None):
 
     with open('process_input.txt', "w") as file: # Saving to pass to process_directory() later
         file.write(tmp_ + '\n')
-        file.write(npy_save_to)
+        file.write(str(npy_save_to))
 
-def chlorophyll(paths):
+def chlorophyll(changeDir, tmp_, npy_save_to):
     # Algorithm to get chlorophyll-a, from this paper:
     # https://www.sciencedirect.com/science/article/pii/S1569843223000456#b0040
+
+    os.chdir(changeDir)  # Change directory to that of polymer, just in case
+    chlor_alg = 'algOut'  # Folder name for chlorophyll algorithm output files
+    path2 = os.path.join(tmp_, npy_save_to)
 
     # Defining regression coefficients
     vals = []
@@ -77,4 +81,12 @@ def chlorophyll(paths):
     vals.append(-9.0585)
     vals.append(8.4015)
 
-    satFunctions.calculate_and_save_result(paths, vals, 'chlorAlg')
+    filevals = ['Rw443', 'Rw490', 'Rw560', 'Rw674', 'Rw681'] # Defining the bands we care about
+
+    paths = satFunctions.find_files_with_strings(path2, filevals) # Getting file paths for npy files
+
+    saveLoc = os.path.join(os.getcwd(), tmp_)
+    satFunctions.create_folder(saveLoc, chlor_alg)
+    saveLoc = os.path.join(saveLoc, chlor_alg)
+
+    satFunctions.calculate_and_save_result(paths, vals, chlor_alg, saveLoc)

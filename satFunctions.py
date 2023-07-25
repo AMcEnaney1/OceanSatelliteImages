@@ -27,7 +27,81 @@ import glob
 
 ## End of Imports
 
-def calculate_and_save_result(npy_files, float_list, name):
+def del_file(file_path):
+    try:
+        os.remove(file_path)
+    except OSError as e:
+        print(f"Error: {e}")
+
+def get_surface_level_folders(folder_path):
+    try:
+        # Get a list of all items (files and subfolders) in the specified folder
+        all_items = os.listdir(folder_path)
+
+        # Filter out only the directories (subfolders) from the list
+        subfolders = [item for item in all_items if os.path.isdir(os.path.join(folder_path, item))]
+
+        return subfolders
+    except OSError as e:
+        print(f"Error: {e}")
+        return []
+
+def remove_overlap(current_working_directory, deeper_file_path):
+    # Normalize the paths to handle different separators (e.g., / or \)
+    current_working_directory = os.path.normpath(current_working_directory)
+    deeper_file_path = os.path.normpath(deeper_file_path)
+
+    # Split the paths into individual directories
+    cwd_dirs = current_working_directory.split(os.sep)
+    deeper_dirs = deeper_file_path.split(os.sep)
+
+    new_dirs = set(deeper_dirs).difference(set(cwd_dirs)) # Set operation to remove overlap
+    new_dirs = list(new_dirs)
+
+    # The set operation has a random chance to change order, very annoying
+    if ((len(new_dirs) > 1)): # Can't be reversed if length is 1
+        check1 = []
+        check1.append(deeper_dirs[-1])
+        check1.append(deeper_dirs[-2])
+
+        if (check1[0] == new_dirs[0]): # Checks if order is wrong
+            new_dirs.reverse() # Fixes order
+
+    # Combine the remaining directories to form the new file path
+    new_file_path = os.path.join(*new_dirs)
+
+    return new_file_path
+
+def move_files_by_type(start_folder, destination_folder, file_type):
+    # Ensure the folders end with a path separator '/'
+    start_folder = os.path.normpath(start_folder) + os.sep
+    destination_folder = os.path.normpath(destination_folder) + os.sep
+
+    # Create the destination folder if it doesn't exist
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+
+    # Get a list of all files in the starting folder (surface level only)
+    files = os.listdir(start_folder)
+    for file in files:
+        if os.path.isfile(os.path.join(start_folder, file)) and file.endswith(file_type):
+            source_file_path = os.path.join(start_folder, file)
+            destination_file_path = os.path.join(destination_folder, file)
+            shutil.move(source_file_path, destination_file_path)
+
+def find_files_with_strings(folder_path, search_strings):
+    # Create an empty list to store the matching file paths
+    matching_files = []
+
+    # Get a list of all files in the folder (not diving into subfolders)
+    with os.scandir(folder_path) as entries:
+        for entry in entries:
+            if entry.is_file() and any(search_str in entry.name for search_str in search_strings):
+                matching_files.append(entry.path)
+
+    return matching_files
+
+def calculate_and_save_result(npy_files, float_list, name, saveLoc):
     if len(float_list) != len(npy_files) + 1:
         raise ValueError("The length of float_list should be one more than the number of npy_files.")
 
@@ -39,8 +113,11 @@ def calculate_and_save_result(npy_files, float_list, name):
     for i in range(len(npy_data)):
         result += float_list[i+1] * npy_data[i]
 
+    name = name + '.npy'
+    savePath = os.path.join(saveLoc, name)
+
     # Save the result to a new .npy file
-    np.save(name + '.npy', result)
+    np.save(savePath, result)
 
 def unzip_all_zip_files(directory):
     # Iterate through all the files in the directory
@@ -55,7 +132,6 @@ def unzip_all_zip_files(directory):
 
             # Remove the original zip file if desired (optional)
             os.remove(filepath)
-
 
 def move_elements_down_one(input_list):
     new_list = [''] + input_list[:-1]
@@ -74,7 +150,7 @@ def bbox_to_WKT(bbox): # Converts a bounding box to well-known text representati
 
     return wkt_bbox
 
-def create_folder(path, folder_name):
+def create_folder(path, folder_name, do_prints = False):
     # Combine the path and folder name
     folder_path = os.path.join(path, folder_name)
 
@@ -82,9 +158,11 @@ def create_folder(path, folder_name):
     if not os.path.exists(folder_path):
         # Create the folder
         os.makedirs(folder_path)
-        print(f"Folder '{folder_name}' created at '{folder_path}'")
+        if (do_prints):
+            print(f"Folder '{folder_name}' created at '{folder_path}'")
     else:
-        print(f"Folder '{folder_name}' already exists at '{folder_path}'")
+        if (do_prints):
+            print(f"Folder '{folder_name}' already exists at '{folder_path}'")
 
 
 def convert_all_npy_and_nc(path, preface="image", date_tuples=None, project_name='name', folder_name = 'sen'):
@@ -139,7 +217,6 @@ def process_directory(directory, save_to = None):
         convert_nc_to_npy(nc_file, save_to)
 
 def convert_nc_to_npy(nc_file_path, save_to=None):
-
     try:
         # Open the NetCDF file
         dataset = nc.Dataset(nc_file_path)
@@ -152,9 +229,9 @@ def convert_nc_to_npy(nc_file_path, save_to=None):
                     continue  # Skip to the next variable
 
                 if isinstance(save_to, str) and save_to is not None:
-                    parts = nc_file_path.split('/')
-                    parts[-3] = save_to
-                    npy_file_path1 = '/'.join(parts)
+                    npy_file_path_tmp = os.path.join(os.getcwd(), os.path.dirname(nc_file_path)) # Excludes file name
+                    create_folder(npy_file_path_tmp, save_to) # Creates folder to save to
+                    npy_file_path1 = os.path.join(npy_file_path_tmp, save_to, os.path.basename(nc_file_path))
                 else:
                     npy_file_path1 = nc_file_path
 

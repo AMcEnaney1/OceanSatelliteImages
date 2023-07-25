@@ -2,16 +2,6 @@
 ## June 30th, 2023
 ## Code for satellite image analysis
 
-## TODO
-    # POM (Particulate Organic Matter)
-    # POC (Particulate Organic Carbon)
-    # Ocean Salinity
-    # Dissolved Oxygen
-    # Aerial Exposure (fraction of days exposed to air)
-    # TPM (Total Particulate Mass)
-    # PIM (Particulate Inorganic Mass)
-
-
 ## Imports
 
 import satFunctions
@@ -70,9 +60,11 @@ def main():
             chlorophyll2Preface.append('chlor_algo' + str(j))
 
         chlorPoly_save_path1 = 'polymer-v4.16.1'
-        chlorPoly_save_path2 = os.path.join(outputs_folder, 'chlorPoly', '')
-        poly_dir = os.path.join(chlorPoly_save_path2, projectName[i])
+        #chlorPoly_save_path2 = os.path.join(outputs_folder, 'chlorPoly', '')
+        chlorPoly_save_path2 = os.path.join('chlorPoly', '')
+        poly_dir = os.path.join(chlorPoly_save_path2, projectName[i]) # Needs to be moved, right now is reliant on stuff done in models.py
         chlorPoly_save_path = os.path.join(chlorPoly_save_path1, chlorPoly_save_path2)
+        npy_save_to = projectName[i] + '_' + 'poly_files' # Sets folder name for where the npy files taken from polymer output go
 
         ## Setting up farm coordinates
 
@@ -154,7 +146,7 @@ def main():
 
         # Models, due to computation time models go  after api calls and figures are made
 
-        models.chlor(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, npy_save_to=True)
+        models.chlor(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, npy_save_to=npy_save_to)
 
         with open('shell_input.txt', "w") as file:
             file.write(poly_dir) # Writing as a text file for bash script to use
@@ -164,9 +156,23 @@ def convert():
         tmp_ = file.readline().strip()
         npy_save_to = file.readline().strip()
 
-    satFunctions.process_directory(tmp_, npy_save_to)  # Converts all of these .nc files into .npy files
+    satFunctions.del_file('shell_input.txt') # Deletes the file we just read from
 
+    os.chdir(os.path.join(os.getcwd(), 'polymer-v4.16.1')) # Change directory to that of polymer
 
+    tmp_ = satFunctions.remove_overlap(os.getcwd(), tmp_)
+
+    satFunctions.move_files_by_type(os.getcwd(), tmp_, '.nc') # Moves the outputs from POLYMER
+
+    filevals = satFunctions.get_surface_level_folders(tmp_) # Gets a list of the downloaded folders
+
+    paths = satFunctions.find_files_with_strings(tmp_, filevals) # Get nc files output by POLYMER to convert to npy
+
+    for path in paths: # Creates npy files for all the parts of each nc file
+        satFunctions.convert_nc_to_npy(path, save_to=npy_save_to)
+
+    models.chlorophyll(os.getcwd(), tmp_, npy_save_to) # Calls the chlorophyll model
 
 if __name__ == "__main__":
     main()
+    #convert()
