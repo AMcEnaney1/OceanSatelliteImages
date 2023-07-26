@@ -94,7 +94,7 @@ csv_path_sediment_suffix = '_Sed'
 sedimentPreface = 'Sed'
 
 # This is the suffix for the oxygen data cvs from sentinelHub
-csv_path_sediment_suffix = '_Oxy'
+csv_path_oxygen_suffix = '_Oxy'
 
 # Used throughout the code and file names to keep track of oxygen data from sentinelHub
 oxygenPreface = 'Oxy'
@@ -147,10 +147,10 @@ csvpath_thermal = [None] * length
 csvpath_chlorophyll = [None] * length
 csvpath_sediment = [None] * length
 csvpath_oxygen = [None] * length
-csvpath_oxygen2 = empty_list = [[] for _ in range(length)]
-oxygen2Preface = empty_list = [[] for _ in range(length)]
-csvpath_chlorophyll2 = empty_list = [[] for _ in range(length)]
-chlorophyll2Preface = empty_list = [[] for _ in range(length)]
+csvpath_oxygen2 = [[] for _ in range(length)]
+oxygen2Preface = [[] for _ in range(length)]
+csvpath_chlorophyll2 = [[] for _ in range(length)]
+chlorophyll2Preface = [[] for _ in range(length)]
 
 for i in range(length):
     operations_txt_filename[i] = projectName[i] + operations_txt_suffix + '.txt'

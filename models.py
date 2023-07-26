@@ -13,7 +13,7 @@ import subprocess
 
 ## End of Imports
 
-def chlor(bbox, date_tuples, project_name, path, npy_save_to=None):
+def model_routine(bbox, date_tuples, project_name, path, model, npy_save_to=None, polymer_root_name = 'polymer-v4.16.1'):
 
     if (npy_save_to == True): # Default folder for npy files, this is so POLYMER doesnt get upset
         npy_save_to = project_name + '_' + 'npyFiles'
@@ -24,6 +24,16 @@ def chlor(bbox, date_tuples, project_name, path, npy_save_to=None):
 
     for i in range(len(tmp)-1):
         satFunctions.create_folder(tmp[i], tmp[i+1])
+
+    func = model(bbox, date_tuples, project_name, path)
+
+    satFunctions.unzip_all_zip_files(tmp_)  # Unzips all the folders, so we have folders of .nc files, also deletes zips
+
+    print(subprocess.run('./run_polymer.sh'))
+
+    convert(tmp_, npy_save_to, func, polymer_root_name=polymer_root_name)
+
+def chlor(bbox, date_tuples, project_name, path):
 
     wkt_bbox = satFunctions.bbox_to_WKT(bbox)
 
@@ -59,15 +69,12 @@ def chlor(bbox, date_tuples, project_name, path, npy_save_to=None):
         # Use the download_path parameter to specify the download directory
         api.download_all(products, directory_path=download_directory)
 
-    satFunctions.unzip_all_zip_files(tmp_) # Unzips all the folders, so we have folders of .nc files, also deletes zips
+        return chlorophyll
 
-    print(subprocess.run('./run_polymer.sh'))
 
-    convert(tmp_, npy_save_to, chlorophyll)
+def convert(tmp_, npy_save_to, model_func, polymer_root_name):
 
-def convert(tmp_, npy_save_to, model_func):
-
-    os.chdir(os.path.join(os.getcwd(), 'polymer-v4.16.1')) # Change directory to that of polymer
+    os.chdir(os.path.join(os.getcwd(), polymer_root_name)) # Change directory to that of polymer
 
     tmp_ = satFunctions.remove_overlap(os.getcwd(), tmp_)
 

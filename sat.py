@@ -86,7 +86,7 @@ def main():
         with open('shell_input.txt', "w") as file:
             file.write(poly_dir) # Writing as a text file for bash script to use
 
-        models.chlor(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, npy_save_to=npy_save_to)
+        models.routine(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, models.chlor, npy_save_to=npy_save_to)
 
         satFunctions.del_file('shell_input.txt')  # Deletes the file we made earlier
 
