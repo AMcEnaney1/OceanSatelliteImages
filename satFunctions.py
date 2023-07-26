@@ -27,6 +27,15 @@ import glob
 
 ## End of Imports
 
+def sort_list_b_based_on_list_a(a, b):
+    # Create a dictionary to store the indices of elements in list 'a'
+    index_dict = {value: index for index, value in enumerate(a)}
+
+    # Sort list 'b' based on the indices in list 'a'
+    sorted_b = sorted(b, key=lambda x: index_dict[x])
+
+    return sorted_b
+
 def del_file(file_path):
     try:
         os.remove(file_path)
@@ -58,14 +67,7 @@ def remove_overlap(current_working_directory, deeper_file_path):
     new_dirs = set(deeper_dirs).difference(set(cwd_dirs)) # Set operation to remove overlap
     new_dirs = list(new_dirs)
 
-    # The set operation has a random chance to change order, very annoying
-    if (len(new_dirs) > 1): # Can't be reversed if length is 1
-        check1 = []
-        check1.append(deeper_dirs[-1])
-        check1.append(deeper_dirs[-2])
-
-        if (check1[0] == new_dirs[0]): # Checks if order is wrong
-            new_dirs.reverse() # Fixes order
+    new_dirs = sort_list_b_based_on_list_a(list(deeper_dirs), new_dirs) # Fixes order since sets don't have order
 
     # Combine the remaining directories to form the new file path
     new_file_path = os.path.join(*new_dirs)
