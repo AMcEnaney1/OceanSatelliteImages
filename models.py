@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from collections import OrderedDict
 import satFunctions
 import os
+import subprocess
 
 ## End of Imports
 
@@ -60,9 +61,26 @@ def chlor(bbox, date_tuples, project_name, path, npy_save_to=None):
 
     satFunctions.unzip_all_zip_files(tmp_) # Unzips all the folders, so we have folders of .nc files, also deletes zips
 
-    with open('process_input.txt', "w") as file: # Saving to pass to process_directory() later
-        file.write(tmp_ + '\n')
-        file.write(str(npy_save_to))
+    print(subprocess.run('./run_polymer.sh'))
+
+    convert(tmp_, npy_save_to, chlorophyll)
+
+def convert(tmp_, npy_save_to, model_func):
+
+    os.chdir(os.path.join(os.getcwd(), 'polymer-v4.16.1')) # Change directory to that of polymer
+
+    tmp_ = satFunctions.remove_overlap(os.getcwd(), tmp_)
+
+    satFunctions.move_files_by_type(os.getcwd(), tmp_, '.nc') # Moves the outputs from POLYMER
+
+    filevals = satFunctions.get_surface_level_folders(tmp_) # Gets a list of the downloaded folders
+
+    paths = satFunctions.find_files_with_strings(tmp_, filevals) # Get nc files output by POLYMER to convert to npy
+
+    for path in paths: # Creates npy files for all the parts of each nc file
+        satFunctions.convert_nc_to_npy(path, save_to=npy_save_to)
+
+    model_func(os.getcwd(), tmp_, npy_save_to) # Calls the specified model
 
 def chlorophyll(changeDir, tmp_, npy_save_to):
     # Algorithm to get chlorophyll-a, from this paper:

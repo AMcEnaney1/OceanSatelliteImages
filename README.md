@@ -1,16 +1,26 @@
 # Satellite Shellfish Modeling
 
+---
+
 Downloads and analyzes data from satellite images, for use in creating a 
 shellfish growth model.
 
+---
+
 ## Table of Contents
+
+---
 
 - [About](#about)
 - [Installation](#installation)
 - [Usage](#usage)
 - [TODO](#todo)
 
-## About
+---
+
+## 1. About
+
+---
 
 As of now this code allows the user to specify N bounding boxes and a time 
 range, and then satellite images over that time range and over the specified 
@@ -27,10 +37,13 @@ the free service, so users have the option. Note that using Sentinelsat
 exclusively will increase runtime substantially, due to the long term 
 archive causing wait times for data requests more than a few months old.
 
+---
 
-## Installation
+## 2. Installation
 
-### My Code
+---
+
+### 2.1 My Code
 
 To install you can start by cloning the repository
 
@@ -45,7 +58,7 @@ conda env create -f environment.yaml
 conda activate your-environment-name
 ```
 
-### POLYMER
+### 2.2 POLYMER
 
 The POLYMER algorithm called be downloaded from 
 [Hygeos](https://www.hygeos.com/polymer), after making an account and 
@@ -61,28 +74,13 @@ make
 
 Then, as above create the conda environment included with POLYMER.
 
-## Usage
+---
 
-### Bash Script
+## 3. Usage
 
-To run the bash script, 'manage.py' first make sure your bash environment
-is set up to run conda commands, do this with the following command: (This
-may not work, in which case I suggest using mamba.)
+---
 
-```shell
-conda init
-```
-
-Then go into the bash script and change the conda environment names to 
-their actual names. You then need to give permission to the bash script
-and run it:
-
-```shell
-chmod +x manage.sh
-./manage.sh
-```
-
-### First Run
+### 3.1 First Run
 
 Before running the code there are a few things that must be done:
 * Your API keys must be entered into the 'keys.py' file or otherwise 
@@ -100,7 +98,33 @@ your usage.
 Once these are done you can simply run the main function in 'sat.py' or,
 if using models run using the bash script, 'manage.sh'.
 
-### Following Runs
+### 3.2 Running
+
+There are two ways to run the code as of now, with bash script or through
+the main function in sat.py. They are almost identical right now, however 
+arguments will be able to passed to the bash script in the future.
+
+#### 3.2.1 Bash Script
+
+To run the bash script, 'manage.sh' first make sure your bash environment
+is set up to run conda commands, do this with the following command: (This
+may not work, in which case I suggest using mamba.)
+
+```shell
+conda init
+```
+
+Then go into the bash script and change the conda environment names to 
+their actual names. You then need to give permission to the bash script
+and run it:
+
+```shell
+chmod +x manage.sh
+chmod +x run_polymer.sh
+./manage.sh
+```
+
+### 3.3 Following Runs
 
 The program is written in such a way such that for subsequent runs of
 the code, after the first, so long as the log file remains needless
@@ -116,15 +140,41 @@ chmod +x clean.sh
 where here 'out' is root folder for our outputs from the SentinelHub API.
 The same can be done for your outputs from the Sentinelsat API.
 
-### Modifying requests
+### 3.4 Modifying requests
 
-If you wish to request new or different bands than what is currently set
-you can add an evalscript to the 'evalscripts.py' file and then add a new 
-request to the 'requestFunctions.py' file. Once this is done make sure to
-add or remove paths set in 'sat.py' as you need before setting the
-resolution and adding the function call. 
+#### 3.4.1 Adding SentinelHub requests
+
+As is this code allows for both individual and bulk requests of satellite
+bands from all [supported satellites](https://docs.sentinel-hub.com/api/latest/data/).
+
+If you are adding a request of a singular band you need to first add an
+evalscript to the 'evalscripts.py' file, then add the corresponding
+request function to the 'requestFunctions.py' file. Once you have done
+this you can define the relevant file and folder paths in 'globalVars.py',
+these would be a string representing the preface and a string representing
+a suffix for the related csv files. Then move down to the computations
+section and set up a csv path using the current paths as examples. You
+are now ready to call this request in the main function of 'sat.py'.
+
+If you are adding a request of multiple bands you can do the same steps
+as done for the singular band, only this time when moving to the computations
+section be sure to create a new for loop as directed at the top of 
+'globalVars.py'.
+
+#### 3.4.2 Removing SentinelHub requests
+
+To remove requests you can just remove the code calling them from
+the main function in 'sat.py'.
+
+#### 3.4.3 Adding Sentinelsat requests
+
+#### 3.4.3 Removing Sentinelsat requests
+
+---
 
 ## TODO
+
+---
 
 ### POLYMER
 
@@ -150,3 +200,5 @@ resolution and adding the function call.
 * Make script to run POLYMER aside from included polymer_cli.py
 * remove_overlap() needs to be changed so order is fixed for any length,
 not just length 1 or 2.
+
+---

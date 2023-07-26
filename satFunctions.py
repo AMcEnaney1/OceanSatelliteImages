@@ -59,7 +59,7 @@ def remove_overlap(current_working_directory, deeper_file_path):
     new_dirs = list(new_dirs)
 
     # The set operation has a random chance to change order, very annoying
-    if ((len(new_dirs) > 1)): # Can't be reversed if length is 1
+    if (len(new_dirs) > 1): # Can't be reversed if length is 1
         check1 = []
         check1.append(deeper_dirs[-1])
         check1.append(deeper_dirs[-2])
