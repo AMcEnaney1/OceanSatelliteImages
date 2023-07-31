@@ -190,12 +190,4 @@ the main function in 'sat.py'.
 * TPM (Total Particulate Mass)
 * PIM (Particulate Inorganic Mass)
 
-### Cleanup
-
-* Fix convert_nc_to_npy() so that save folders don't have to be exclusively deeper.
-* Make script to run POLYMER aside from included polymer_cli.py
-* remove_overlap() needs to be changed so order is fixed for any length,
-not just length 1 or 2.
-* Create more bash scripts for various uses.
-
 ---
