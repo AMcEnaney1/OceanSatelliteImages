@@ -72,7 +72,10 @@ make auxdata_all
 make
 ```
 
-Then, as above create the conda environment included with POLYMER.
+Then, as above create the conda environment included with POLYMER. 
+
+As of v4.16.1 it is also necessary to make the changes outlined in this 
+[forum post](https://forum.hygeos.com/viewtopic.php?f=7&t=218).
 
 ---
 
@@ -82,21 +85,29 @@ Then, as above create the conda environment included with POLYMER.
 
 ### 3.1 First Run
 
-Before running the code there are a few things that must be done:
-* Your API keys must be entered into the 'keys.py' file or otherwise 
-configured.
-* API config info must be added or removed from 'configg.py', depending on
-your usage.
-* the 'sat.py' file must be modified in several ways:
-  * The coordinates list must be updated to include all the boundary boxes that
-  are desired.
-  * The projectName list must be updated to have a name for every bbox.
-  * the createImages list must be updated to include a boolean value for each
-  bbox/project.
-  * The start, end and n_chunks variables must be changed to what is desired.
+#### 3.1.1 API Keys
 
-Once these are done you can simply run the main function in 'sat.py' or,
-if using models run using the bash script, 'manage.sh'.
+API keys must be entered into the 'keys.py' file or otherwise configured. 
+For SentinelHub information on API keys can be found [here](https://docs.sentinel-hub.com/api/latest/api/overview/authentication/)
+and for Sentinelsat your API the keys are your username and password used 
+[here](https://scihub.copernicus.eu/dhus/#/home).
+
+#### 3.1.2 API Config
+
+After setting your API keys you can set up the API confifgs in 'configg.py'.
+If you are not using one of the APIs you need to comment out the lines 
+containing its config, if you have added an API you can add its config here,
+and if you have changed any variable names in 'keys.py' you need to make
+the change here as well.
+
+#### 3.1.3 Global Variables
+
+All the variables subject to change that are needed for the regular
+function of the code are contained in 'GlobalVars.py' and can be set there.
+This includes farm bounding boxes and names, time frames, data points, and
+folder/file names, as well as several others. If you wish to get the bands
+already specified in 'sat.py' you only need change bounding box locations, 
+farm names, start and end time and the number of data points.
 
 ### 3.2 Running
 
@@ -168,7 +179,14 @@ the main function in 'sat.py'.
 
 #### 3.4.3 Adding Sentinelsat requests
 
+This is currently not as easy as adding SentinelHub requests, however, can 
+still be done. To do so you can create a function in 'models.py' similar to
+'chlor()' before calling it through the 'model_routine()' function in
+'sat.py''.
+
 #### 3.4.3 Removing Sentinelsat requests
+
+See above.
 
 ---
 
@@ -179,6 +197,8 @@ the main function in 'sat.py'.
 ### POLYMER
 
 * Need to get Ancillary data.
+* Need to call POLYMER's 'run_atm_corr()' directly in python script instead
+of calling 'polymer_cli.py'.
 
 ### Models (Not all Possible)
 
