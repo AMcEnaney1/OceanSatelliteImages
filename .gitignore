@@ -8,8 +8,8 @@
 # We don't want to store api keys in public repo
 keys.py
 
-# Can't upload polymer code
-polymer-v4.16.1/
+# Can't upload polymer code, but want to keep folder structure for scripts
+polymer-v4.16.1/**
 
-# Don't want to push a ton of random files
+# Don't want to push a ton of random junk files
 out/**

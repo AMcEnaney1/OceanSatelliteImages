@@ -2,7 +2,7 @@
 ## July 12th, 2023
 ## Code for various models used to get parameters
 
-## Imports
+## Start of imports
 
 from configg import *
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ import satFunctions
 import os
 import subprocess
 
-## End of Imports
+## End of imports
 
 def model_routine(bbox, date_tuples, project_name, path, model, npy_save_to=None, polymer_root_name = 'polymer-v4.16.1'):
 

@@ -2,8 +2,7 @@
 ## June 30th, 2023
 ## Python file to store requests
 
-
-## Imports
+## Start of imports
 
 import evalscripts
 from sentinelhub import (
@@ -13,8 +12,19 @@ from sentinelhub import (
     SentinelHubRequest,
 )
 
-## End of Imports
+## End of imports
 
+## These are the request functions used by the SentinelHub api, they utilize the evalscripts in 'evalscripts.py'
+## Information on units, bands, and sample types for the various supported satellites can be found here:
+## https://docs.sentinel-hub.com/api/latest/data/
+## Documentation for sentinelHub requests is scattered across the previous page and this one:
+## https://docs.sentinel-hub.com/api/latest/evalscript/v3/
+
+
+# This is the request for thermal data, using the evalscript 'evalscript_t'. We declare that we are using this
+# evalscript and what satellite we are using here. This is also where the output response type is defined
+# as well as the mosaicking order, information on the supported mosaicking orders for a specific satellite can
+# be found on the individual satellite's page on the first website linked above.
 def get_thermal_request(time_interval, farm_bbox, farm_size, config):
     return SentinelHubRequest(
         evalscript=evalscripts.evalscript_t,
@@ -76,6 +86,8 @@ def get_oxygen_request(time_interval, farm_bbox, farm_size, config):
         config=config,
     )
 
+# This is a bulk request, there is really no difference, in the definition at least, between singular and bulk requests.
+# The only difference is how the output is handled as the request now returns a different shape of array.
 def get_all_s2l2a_request(time_interval, farm_bbox, farm_size, config):
     return SentinelHubRequest(
         evalscript=evalscripts.evalscript_all_s2l2a,

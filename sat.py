@@ -16,29 +16,34 @@ import os
 
 def main():
 
+    # Check if sentinelHub config is configured properly
     if not config.sh_client_id or not config.sh_client_secret:
         print("Warning! To use Process API, please provide the credentials (OAuth client ID and client secret).")
 
     for i in range(length):
 
+        ## Below are various calls of the 'core()' function, this is what handles just about everything involving
+        ## the sentinelHub API.
+        ## The resolution is defined right before the call before being passed along with everything else.
+
         # Thermal Data
 
         resolution = 30  # Resolution for thermal images
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path[i], thermalPreface, farm_coords_wgs84,
-                        figure_save_path, csvpath_thermal[i], operext, projectName[i], request_function=requestFunctions.get_thermal_request, createImages= createImages[i])
+                        figure_save_path, csvpath_thermal[i], operext, projectName[i],
+                          request_function=requestFunctions.get_thermal_request, createImages= createImages[i])
 
         # Chlorophyll Data
 
-        resolution = 100  # Resolution for chlorophyll images, actual res is 300,
-                                        # but we can't assume our bbox line up exactly, especially with such a small area
+        resolution = 100  # Resolution for chlorophyll images, actual res is 300, example of how it doesn't need to be exact
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path[i], chlorophyllPreface, farm_coords_wgs84,
-                        figure_save_path, csvpath_chlorophyll[i], operext, projectName[i], request_function=requestFunctions.get_chlorophyll_request, createImages= createImages[i])
+                        figure_save_path, csvpath_chlorophyll[i], operext, projectName[i],
+                          request_function=requestFunctions.get_chlorophyll_request, createImages= createImages[i])
 
 
         # Sediment Data
 
         resolution = 100  # Resolution for sediment images, actual res is 300,
-        # but we can't assume our bbox line up exactly, especially with such a small area
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path[i], sedimentPreface,
                           farm_coords_wgs84,
                           figure_save_path, csvpath_sediment[i], operext, projectName[i],
@@ -47,7 +52,6 @@ def main():
         # Oxygen Absorption Data
 
         resolution = 100  # Resolution for oxygen images, actual res is 300,
-        # but we can't assume our bbox line up exactly, especially with such a small area
         satFunctions.core(resolution, date_tuples, sat_image_save_path, operations_save_path[i], oxygenPreface,
                           farm_coords_wgs84,
                           figure_save_path, csvpath_oxygen[i], operext, projectName[i],
@@ -71,7 +75,9 @@ def main():
         # How this chlorophyll band works:
         # https://sentinels.copernicus.eu/web/sentinel/technical-guides/sentinel-3-olci/level-2/oc4me-chlorophyll
 
+
         # Creating plots of data
+        # This is where I am creating plots of data collected via the sentinelHub API.
 
         plotFunctions.plot_csv_data(csvpath_thermal[i], figure_save_path, 'Average', 'Average Temperature (Kelvin)',
                                     farm_coords_wgs84, 'Average Temperature vs. Time')
@@ -81,15 +87,20 @@ def main():
                                     'Average Chlorophyll Concentration', farm_coords_wgs84,
                                     'Average Chlorophyll Concentration vs. Time')
 
-        # Models, due to computation time models go  after api calls and figures are made
 
-        with open('shell_input.txt', "w") as file:
-            file.write(poly_dir) # Writing as a text file for bash script to use
+        # Calling models and sentinelsat API here. It can take a while to get images from the sentinelsat API,
+        # especially when they are in the long term archive.
+        # Running the POLYMER algorithm is also extremely time-consuming, hence why this is done after everything else.
 
-        models.routine(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, models.chlor, npy_save_to=npy_save_to)
+        #with open('shell_input.txt', "w") as file:
+        #    file.write(poly_dir) # Writing as a text file for bash script to use
 
-        satFunctions.del_file('shell_input.txt')  # Deletes the file we made earlier
+        # Calling the chlorophyll algorithm, this is also calling and running POLYMER.
+        #models.model_routine(farm_coords_wgs84, date_tuples, projectName[i], chlorPoly_save_path, models.chlor, npy_save_to=npy_save_to)
 
+        # Deletes the file we made earlier, note that we delete this here instead of in the bash script so that
+        # multiple models can be run without issue.
+        #satFunctions.del_file('shell_input.txt')
 
 if __name__ == "__main__":
     main()

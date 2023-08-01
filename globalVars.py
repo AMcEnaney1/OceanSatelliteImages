@@ -29,13 +29,13 @@ projectName = ['MaxFarm'] # These will be prefixes in the relevant files
 # These variables set the start and end dates for the data collection
 start_year = 2021
 end_year = 2023
-start_month = 5
-end_month = 5
+start_month = 4
+end_month = 4
 start_day = 1
 end_day = 30
 
 # This is 1 more than the amount of data points you want to collect
-n_chunks = 13
+n_chunks = 15
 
 # List of boolean values, one per bounding box
 createImages = [False] # If True, .npy and .png images will be created when making calls with SentinelHub

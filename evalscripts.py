@@ -2,7 +2,15 @@
 ## June 30th, 2023
 ## Python file to store evalscripts
 
+## These evalscripts are what is used by the request functions for the SentinelHub api, requests are defined in 'requestFunctions.py'
+## Information on units, bands, and sample types for the various supported satellites can be found here:
+## https://docs.sentinel-hub.com/api/latest/data/
+## Documentation pertaining to evalscripts in particular can be found here:
+## https://docs.sentinel-hub.com/api/latest/evalscript/v3/
 
+
+# Evalscript to get band 10 data in the format of 32-bit floats, these are returned in raw form, the exact satellite
+# that this data is not specified here as that is specified in whatever request function calls the evalscript.
 evalscript_t = """
     //VERSION=3
     function setup() {
@@ -79,6 +87,9 @@ function evaluatePixel(samples) {
 }
 """
 
+# Evalscript to get 13 bands of data in the format of 16-bit integers, the unit type of 'DN' stands for 'digital number',
+# and is the unit specified in the documentation for the SENTINEL2_L2A satellite. The satellite specified in the
+# 'get_all_s2l2a_request()' function. The documentation for this is linked at the top of this file.
 evalscript_all_s2l2a = """
     //VERSION=3
     function setup() {

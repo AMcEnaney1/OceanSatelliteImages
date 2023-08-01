@@ -3,17 +3,18 @@
 ## Functions used for plotting
 
 
-## Imports
+## Start of imports
 
 import os
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-
 import satFunctions
 
+## End of imports
 
-## End of Imports
+## This is where function to create plots and figures can go.
+## The included 'utils.py' file is part of the SentinelHub examples and makes for easy plotting, good for testing.
 
 
 def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
@@ -57,7 +58,13 @@ def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
 
     plt.tight_layout()
 
-    if save_path:
+    if (save_path):
+        check_path = save_path + '.npy'
+        check_path = check_path.split('/')
+        check_path = os.path.join(*list(check_path[:len(check_path)]))
+        #if (not os.path.exists(save_path)):
+        if (not os.path.exists(check_path)):
+            satFunctions.create_batch_folders(save_path)
         plt.savefig(save_path)  # Save the figure as an image file
 
     plt.close()

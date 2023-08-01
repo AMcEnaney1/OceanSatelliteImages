@@ -27,6 +27,18 @@ import glob
 
 ## End of Imports
 
+def create_batch_folders(save_path): # Takes in path terminating with file
+    folders = save_path.split('/')  # Gets names of required folders
+
+    for i in range(len(folders) - 1):
+        tmp_path = os.path.join(*list(folders[:i + 1]))
+        if (i > 0):
+            tmp_path2 = os.path.join(*list(folders[:i]))
+        else:
+            tmp_path2 = ''
+        if (not os.path.exists(tmp_path)):
+            create_folder(tmp_path2, folders[i])
+
 def sort_list_b_based_on_list_a(a, b):
     # Create a dictionary to store the indices of elements in list 'a'
     index_dict = {value: index for index, value in enumerate(a)}
@@ -286,12 +298,10 @@ def get_timeslots(start, end, n_chunks):
 def create_blank_file(filename):
     _, file_extension = os.path.splitext(filename)
     if os.path.exists(filename):
-        print(f"Error: File '{filename}' already exists, continuing.")
+        print(f"Error: File '{filename}' already exists, continuing. If you are seeing this something went wrong.")
     else:
         with open(filename, 'w'):
-            pass # Removed creation of empty row as that caused issues with the
-                            # current writing method due to now using append mode instead of write mode
-                            # Not the main fix for this commit so commenting here, will remove later
+            pass
 
 def write_data_to_csv(ndarrays, date_tuples, csv_path):
     # Prepare the data for writing to CSV
@@ -480,7 +490,7 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
     if (as_nc):
         convert_all_npy_and_nc(sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
 
-    # Now we create a text file with the data we have so we don't waste api calls if we are just filling data
+    # Now we create a text file with the data we have, so we don't waste api calls if we are just filling data
     populate_text_file(date_tuples, operext, operations_save_path, preface, project_name)
 
     name = date_tuples[0][0] + "_" + date_tuples[len(date_tuples)-1][1] + preface + '.png'
@@ -509,6 +519,7 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
     # We also need to create our log file, if one doesn't already exist
 
     if (not os.path.exists(operations_save_path)): # Operation log file doesn't already exist
+        create_batch_folders(operations_save_path) # Creates folders leading up to file
         create_blank_file(operations_save_path) # Create operation log file if it doesn't already exist
 
     if (not (type(preface) is list)):
@@ -516,8 +527,11 @@ def core(resolution, date_tuples, sat_image_save_path, operations_save_path, pre
         csvpath = [csvpath]
 
     for i in range(len(preface)):
+
         # Creating csv
-        create_blank_file(csvpath[i])
+        if (not os.path.exists(csvpath[i])): # Checks if csv already exists
+            create_batch_folders(csvpath[i])
+            create_blank_file(csvpath[i])
 
         if (createImages):
             nonexisting = check_files_exist(date_tuples, operext, sat_image_save_path, preface[i])

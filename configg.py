@@ -2,12 +2,15 @@
 ## June 30th, 2023
 ## Python file to do config
 
+## Start of imports
 
 from sentinelhub import SHConfig
 from sentinelsat import SentinelAPI
 import keys
 
-## Comment out api's config if you are not using it
+## End of imports
+
+## Comment out api's config if you are not using it, possibility stuff will break if you do not do this
 
 # Setting up config for SentinelHub
 config = SHConfig()
