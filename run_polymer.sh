@@ -1,5 +1,12 @@
+#!/bin/bash
+
+# Bash script to call POLYMER via 'polymer_cli.py'
+
+# Source conda, without this environment activation may not work
+source /Users/aidan/mambaforge/etc/profile.d/conda.sh
+
+# Read in contents of file and save as variable
 poly_dir=$(cat "shell_input.txt")
-rm shell_input.txt
 
 # Add '/' character to the end of poly_dir
 poly_dir+="/"
