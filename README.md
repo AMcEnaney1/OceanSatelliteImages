@@ -2,8 +2,8 @@
 
 ---
 
-Downloads and analyzes data from satellite images, for use in creating a 
-shellfish growth model.
+Downloads and analyzes data from satellite images, for use in eventually
+creating an open source shellfish growth model.
 
 ---
 
@@ -11,9 +11,9 @@ shellfish growth model.
 
 ---
 
-- [About](#about)
-- [Installation](#installation)
-- [Usage](#usage)
+- [About](#1-about)
+- [Installation](#2-installation)
+- [Usage](#3-usage)
 - [TODO](#todo)
 
 ---
@@ -72,10 +72,14 @@ make auxdata_all
 make
 ```
 
-Then, as above create the conda environment included with POLYMER. 
+Then, as above create the conda environment included with POLYMER.
 
-As of v4.16.1 it is also necessary to make the changes outlined in this 
-[forum post](https://forum.hygeos.com/viewtopic.php?f=7&t=218).
+<details>
+  <summary>As of v4.16.1 it is also necessary to make the changes outlined
+in this <a href="https://forum.hygeos.com/viewtopic.php?f=7&t=218">
+forum post</a>.</summary>
+  <img src="./forumPostAns.png" alt="Image not found" width="500">
+</details>
 
 ---
 
@@ -194,11 +198,19 @@ See above.
 
 ---
 
+### Misc
+
+* Need to make it so bash scripts use 'polymer_root_name' variable instead
+of hard coding in the polymer folder name for each one.
+* Currently need to source conda in multiple bash scripts and hard code the
+file path each time. This also needs to fixed.
+
 ### POLYMER
 
 * Need to get Ancillary data.
 * Need to call POLYMER's 'run_atm_corr()' directly in python script instead
 of calling 'polymer_cli.py'.
+* Need to modify POLYMER call so the same data isn't analyzed multiple times.
 
 ### Models (Not all Possible)
 
