@@ -4,73 +4,22 @@
 
 ## Start of imports
 
-from configg import *
-from datetime import datetime, timedelta
-from collections import OrderedDict
 import satFunctions
 import os
-import subprocess
 
 ## End of imports
 
-def model_routine(bbox, date_tuples, project_name, path, model, npy_save_to=None, polymer_root_name = 'polymer-v4.16.1'):
-
-    if (npy_save_to == True): # Default folder for npy files, this is so POLYMER doesnt get upset
+def model_routine(bbox, date_tuples, project_name, path, model, poly_dir, request_function, npy_save_to=None):
+    if (npy_save_to == True):  # Default folder for npy files, this is so POLYMER doesnt get upset
         npy_save_to = project_name + '_' + 'npyFiles'
 
-    tmp_ = os.path.join(path, project_name)
-    tmp = tmp_.split('/')
-    tmp = satFunctions.move_elements_down_one(tmp)
+    download_directory = os.path.join(path, project_name)
 
-    for i in range(len(tmp)-1):
-        satFunctions.create_folder(tmp[i], tmp[i+1])
+    satFunctions.sentinelsat_routine(bbox, date_tuples, download_directory, request_function)
 
-    func = model(bbox, date_tuples, project_name, path)
+    satFunctions.run_polymer_on_folder(poly_dir)
 
-    satFunctions.unzip_all_zip_files(tmp_)  # Unzips all the folders, so we have folders of .nc files, also deletes zips
-
-    print(subprocess.run('./run_polymer.sh'))
-
-    convert(tmp_, npy_save_to, func, polymer_root_name=polymer_root_name)
-
-def chlor(bbox, date_tuples, project_name, path):
-
-    wkt_bbox = satFunctions.bbox_to_WKT(bbox)
-
-    for i in range(len(date_tuples)):
-        start_date = datetime.strptime(date_tuples[i][0], '%Y-%m-%d')
-        end_date = datetime.strptime(date_tuples[i][1], '%Y-%m-%d')
-
-        # Initialize an empty OrderedDict to store the products
-        products = OrderedDict()
-
-        # Query for products on the earliest date within the date range
-        current_date = start_date
-        while current_date <= end_date:
-            query_kwargs = {
-                'platformname': 'Sentinel-3',
-                'instrumentshortname': 'OLCI',
-                'date': (current_date, current_date + timedelta(days=1)),  # Query for a single day
-                'area': wkt_bbox  # Use the WKT representation for the bounding box
-            }
-            pp = api.query(**query_kwargs)
-
-            if pp:
-                # If products are found on the current date, add them to the products OrderedDict and break the loop
-                products.update(pp)
-                break
-
-            # Move to the next date
-            current_date += timedelta(days=1)
-
-        # Set your desired download directory here
-        download_directory = os.path.join(path, project_name)
-
-        # Use the download_path parameter to specify the download directory
-        api.download_all(products, directory_path=download_directory)
-
-        return chlorophyll
-
+    convert(download_directory, npy_save_to, model, polymer_root_name=polymer_root_name)
 
 def convert(tmp_, npy_save_to, model_func, polymer_root_name):
 
@@ -89,7 +38,7 @@ def convert(tmp_, npy_save_to, model_func, polymer_root_name):
 
     model_func(os.getcwd(), tmp_, npy_save_to) # Calls the specified model
 
-def chlorophyll(changeDir, tmp_, npy_save_to):
+def chlor(changeDir, tmp_, npy_save_to):
     # Algorithm to get chlorophyll-a, from this paper:
     # https://www.sciencedirect.com/science/article/pii/S1569843223000456#b0040
 

@@ -1,6 +1,6 @@
 ## Aidan McEnaney
 ## June 30th, 2023
-## Python file to store requests
+## Python file to store requests for sentinelHub API
 
 ## Start of imports
 
