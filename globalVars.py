@@ -127,6 +127,19 @@ npy_file_folder_name_suffix = '_poly_files'
 
 ## Start of required computations
 
+tmp_path = "conda_source_path.txt"  # Text file created by bash script
+
+try:
+    # Open the file in read mode and read the content as a string
+    with open(tmp_path, 'r') as file:
+        conda_path = file.read()
+        conda_path = conda_path.strip()
+
+except FileNotFoundError:
+    print("Text file with conda path not found. Make sure you are running from bash script")
+except IOError:
+    print("An error occurred while reading the conda path text file.")
+
 # Setting up start and end date as well as the amount of snapshots
 start = datetime.datetime(start_year, start_month, start_day)
 end = datetime.datetime(end_year, end_month, end_day)
@@ -139,7 +152,10 @@ chlorPoly_save_path = os.path.join(chlorPoly_save_path1, chlorPoly_save_path2)
 
 length = len(projectName)
 
-# Doing this in multiple lines, so I can get them through bash later
+poly_dir = [None] * length
+poly_dir_app = [None] * length
+npy_save_to = [None] * length
+farm_coords_wgs84 = [None] * length
 operations_txt_filename = [None] * length
 csvpath_base = [None] * length
 operations_save_path = [None] * length
@@ -173,10 +189,11 @@ for i in range(length):
 
     # Bulk Requests End
 
-    poly_dir = os.path.join(chlorPoly_save_path2, projectName[i])  # Needs to be moved, right now is reliant on stuff done in models.py
-    npy_save_to = projectName[i] + npy_file_folder_name_suffix  # Sets folder name for where the npy files taken from polymer output go
+    poly_dir[i] = os.path.join(chlorPoly_save_path2, projectName[i])
+    poly_dir_app[i] = os.path.join(os.getcwd(), polymer_root_name, poly_dir[i])
+    npy_save_to[i] = projectName[i] + npy_file_folder_name_suffix  # Sets folder name for where the npy files taken from polymer output go
 
     # Setting up farm coordinates
-    farm_coords_wgs84 = coordinates[i]
+    farm_coords_wgs84[i] = coordinates[i]
 
 ## End of required computations
