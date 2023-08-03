@@ -1,7 +1,13 @@
 #!/bin/bash
 
+bash delete_files.sh
+
 # Source conda, without this environment activation may not work
-source /Users/aidan/mambaforge/etc/profile.d/conda.sh
+CONDA_PATH="/Users/aidan/mambaforge/etc/profile.d/conda.sh"
+source "$CONDA_PATH"
+
+# Write the conda source path to a text file
+echo "$CONDA_PATH" > conda_source_path.txt
 
 # Activate the Conda environment for sat.py
 conda activate sent
