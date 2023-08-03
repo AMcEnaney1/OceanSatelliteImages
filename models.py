@@ -9,7 +9,8 @@ import os
 
 ## End of imports
 
-def model_routine(bbox, date_tuples, project_name, path, model, poly_dir, request_function, npy_save_to=None):
+def model_routine(bbox, date_tuples, project_name, path, model, poly_dir, request_function, npy_save_to=None,
+                  polymer_root_name='polymer-v4.16.1'):
     if (npy_save_to == True):  # Default folder for npy files, this is so POLYMER doesnt get upset
         npy_save_to = project_name + '_' + 'npyFiles'
 
