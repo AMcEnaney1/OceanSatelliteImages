@@ -7,6 +7,7 @@
 
 import plotFunctions
 from configg import *
+import sentinelsatRequests
 import shutil
 import numpy as np
 from PIL import Image
@@ -24,8 +25,84 @@ from sentinelsat import geojson_to_wkt
 from datetime import datetime
 import zipfile
 import glob
+import subprocess
 
 ## End of Imports
+
+
+def run_polymer_on_folder(poly_dir, filetype=True, sline=None, eline=None, scol=None, ecol=None, blocksize=None,
+                            ancillary=0, landmask=None, altitude=None, add_noise=None, filename=None,
+                            ext=None, tmpdir=None, outdir=None, overwrite=None, datasets=None, compress=None,
+                            format=None, multiprocessing=None, dir_base=None, calib=None, normalize=None):
+
+    for folder in os.listdir(poly_dir):
+        folder_path = os.path.join(poly_dir, folder)
+        if os.path.isdir(folder_path):
+            folder_name = os.path.basename(folder_path)
+            folder_name = os.path.join(poly_dir, folder_name)
+
+            call_polymer(folder_name, filetype=filetype, sline=sline, eline=eline, scol=scol, ecol=ecol, blocksize=blocksize,
+                            ancillary=ancillary, landmask=landmask, altitude=altitude, add_noise=add_noise, filename=filename,
+                            ext=ext, tmpdir=tmpdir, outdir=outdir, overwrite=overwrite, datasets=datasets, compress=compress,
+                            format=format, multiprocessing=multiprocessing, dir_base=dir_base, calib=calib, normalize=normalize)
+
+def call_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol=None, blocksize=None,
+                            ancillary=0, landmask=None, altitude=None, add_noise=None, filename=None,
+                            ext=None, tmpdir=None, outdir=None, overwrite=None, datasets=None, compress=None,
+                            format=None, multiprocessing=None, dir_base=None, calib=None, normalize=None):
+
+    args = ["./run_polymer.sh", "run_polymer", dirname] # Initialize with required arguments
+
+    # Append optional arguments only if they are not None
+    if filetype is not None:
+        args.extend(["--filetype", str(filetype)])
+    if sline is not None:
+        args.extend(["--sline", str(sline)])
+    if eline is not None:
+        args.extend(["--eline", str(eline)])
+    if scol is not None:
+        args.extend(["--scol", str(scol)])
+    if ecol is not None:
+        args.extend(["--ecol", str(ecol)])
+    if blocksize is not None:
+        args.extend(["--blocksize", str(blocksize)])
+    if ancillary is not None:
+        args.extend(["--ancillary", str(ancillary)])
+    if landmask is not None:
+        args.extend(["--landmask", landmask])
+    if altitude is not None:
+        args.extend(["--altitude", str(altitude)])
+    if add_noise is not None:
+        args.extend(["--add_noise", str(add_noise)])
+    if filename is not None:
+        args.extend(["--filename", filename])
+    if ext is not None:
+        args.extend(["--ext", ext])
+    if tmpdir is not None:
+        args.extend(["--tmpdir", tmpdir])
+    if outdir is not None:
+        args.extend(["--outdir", outdir])
+    if overwrite is not None:
+        args.extend(["--overwrite", str(overwrite)])
+    if datasets is not None:
+        args.extend(["--datasets", datasets])
+    if compress is not None:
+        args.extend(["--compress", str(compress)])
+    if format is not None:
+        args.extend(["--format", format])
+    if multiprocessing is not None:
+        args.extend(["--multiprocessing", str(multiprocessing)])
+    if dir_base is not None:
+        args.extend(["--dir_base", dir_base])
+    if calib is not None:
+        args.extend(["--calib", calib])
+    if normalize is not None:
+        args.extend(["--normalize", str(normalize)])
+
+    try:
+        subprocess.run(args, check=True) # Calls script
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
 
 def create_batch_folders(save_path): # Takes in path terminating with file
     folders = save_path.split('/')  # Gets names of required folders
@@ -467,6 +544,18 @@ def reshape_data(data, p):
         reshaped_arr = reshaped_arr[:, :, p]
         reshaped_data.append(reshaped_arr)
     return reshaped_data
+
+def sentinelsat_routine(bbox, date_tuples, download_directory, request_function):
+    tmp = download_directory.split('/')
+    tmp = move_elements_down_one(tmp)
+
+    for i in range(len(tmp) - 1): # Creates folders
+        create_folder(tmp[i], tmp[i + 1])
+
+    #sentinelsatRequests.get_olci(date_tuples, bbox, download_directory) # Downloads zips
+    request_function(date_tuples, bbox, download_directory)  # Downloads zips
+
+    unzip_all_zip_files(download_directory)  # Unzips all the folders, so we have folders of .nc files, also deletes zips
 
 def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
             figure_save_path, csvpath, operext, project_name, request_function, createImages = False, i=0, as_nc = False):
