@@ -29,6 +29,44 @@ import subprocess
 
 ## End of Imports
 
+def most_recent_folder(folder_paths):
+    most_recent_time = 0
+    most_recent_folder = None
+
+    for i in range(len(folder_paths)):
+        if (folder_paths[i].endswith('.DS_Store')):
+            folder_paths.pop(i)
+
+    for folder_path in folder_paths:
+        if os.path.isdir(folder_path):
+            creation_time = os.path.getctime(folder_path)
+            if creation_time > most_recent_time:
+                most_recent_time = creation_time
+                most_recent_folder = folder_path
+
+    return most_recent_folder
+
+def delete_folder_with_contents(folder_name):
+    try:
+        shutil.rmtree(folder_name)
+        print(f"Folder '{folder_name}' and its contents have been deleted successfully.")
+    except Exception as e:
+        print(f"An error occurred while deleting '{folder_name}': {e}")
+
+def get_folder_name(path):
+    # Get a list of all items (files and subfolders) within the given folder
+    items = os.listdir(path)
+
+    # Filter out only the subfolders
+    subfolders = [item for item in items if os.path.isdir(os.path.join(path, item))]
+
+    # Assuming there's only one subfolder, get its name
+    if len(subfolders) == 1:
+        singular_folder_name = subfolders[0]
+    else:
+        print("No singular folder found or multiple subfolders present.")
+
+    return singular_folder_name
 
 def run_polymer_on_folder(poly_dir, filetype=True, sline=None, eline=None, scol=None, ecol=None, blocksize=None,
                             ancillary=0, landmask=None, altitude=None, add_noise=None, filename=None,
@@ -50,6 +88,11 @@ def call_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol
                             ancillary=0, landmask=None, altitude=None, add_noise=None, filename=None,
                             ext=None, tmpdir=None, outdir=None, overwrite=None, datasets=None, compress=None,
                             format=None, multiprocessing=None, dir_base=None, calib=None, normalize=None):
+
+    """
+    filetype: bool, if True then output is .nc file, if False, then .hdf file
+    ancillary: float, if 0 then ancillary data from NASA is used, if None, then no ancillary data is used
+    """
 
     args = ["./run_polymer.sh", "run_polymer", dirname] # Initialize with required arguments
 
@@ -194,6 +237,8 @@ def find_files_with_strings(folder_path, search_strings):
 
 def calculate_and_save_result(npy_files, float_list, name, saveLoc):
     if len(float_list) != len(npy_files) + 1:
+        print(f"npy files: '{npy_files}'")
+        print(f"float list: '{float_list}'")
         raise ValueError("The length of float_list should be one more than the number of npy_files.")
 
     # Read the data from each .npy file and store it in a list
@@ -338,13 +383,15 @@ def convert_nc_to_npy(nc_file_path, save_to=None):
                 np.save(npy_file_path, np_data)
 
             except Exception as e:
-                print("An error occurred while processing variable", variable_name, ":", e)
+                if not (isinstance(e, FileNotFoundError) and "No such file or directory: 'None'" in str(e)):
+                    print("An error occurred while processing variable", variable_name, ":", e)
 
         # Close the NetCDF file outside the loop
         dataset.close()
 
     except Exception as e:
-        print("An error occurred:", e)
+        if not (isinstance(e, FileNotFoundError) and "No such file or directory: 'None'" in str(e)):
+            print("An error occurred:", e)
 
 def load_npy_file(file_path):
     try:
@@ -546,13 +593,13 @@ def reshape_data(data, p):
     return reshaped_data
 
 def sentinelsat_routine(bbox, date_tuples, download_directory, request_function):
+
     tmp = download_directory.split('/')
     tmp = move_elements_down_one(tmp)
 
     for i in range(len(tmp) - 1): # Creates folders
         create_folder(tmp[i], tmp[i + 1])
 
-    #sentinelsatRequests.get_olci(date_tuples, bbox, download_directory) # Downloads zips
     request_function(date_tuples, bbox, download_directory)  # Downloads zips
 
     unzip_all_zip_files(download_directory)  # Unzips all the folders, so we have folders of .nc files, also deletes zips
