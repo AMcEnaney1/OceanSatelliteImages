@@ -217,9 +217,29 @@ To add a sentinelsat request you can define a new request function
 in the 'sentinelsatRequests.py' file. Documentation for creating
 these exist [here](https://sentinelsat.readthedocs.io/en/latest/api_reference.html).
 
+Then you need to create a folder name for this new request, before creating
+a list representing the directories for each different 
+location/bounding box. It is recommended to have this path be of the form
+'polymer_root_directory/location_name/request_name' and may not work 
+otherwise. This should be fixed in later versions of the code.
+
 #### 3.7.3 Removing Sentinelsat requests
 
 See above.
+
+### 3.8 Examples
+
+Examples of how to utilize the different functions are present in 
+'sat.py'. This includes sentinelHub, sentinelsat, running POLYMER,
+and applying linear models.
+
+---
+
+## License
+
+---
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
 
 ---
 
@@ -232,6 +252,8 @@ See above.
 * Several arguments need to be fixed for olci script, these being: 
 altitude (add DEM support), landmask (add GSW object support), 
 datasets (fix list parsing), calib (fix dictionary parsing).
+* Would like to get scripts for ascii, msi and meris implemented.
+* Need to add bitmask and other post POLYMER operations.
 
 ### Models (Not all Possible)
 
