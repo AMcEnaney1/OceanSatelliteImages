@@ -632,7 +632,8 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
     name = date_tuples[0][0] + "_" + date_tuples[len(date_tuples)-1][1] + preface + '.png'
 
     # plot the data nicely
-    plotFunctions.plot_ndarrays(data, date_tuples, farm_coords_wgs84, save_path=figure_save_path + project_name + '_' + name)
+    if (date_tuples < 52):
+        plotFunctions.plot_ndarrays(data, date_tuples, farm_coords_wgs84, save_path=figure_save_path + project_name + '_' + name)
 
     ## Writing thermal data to csv
 
