@@ -22,10 +22,59 @@ import sys
 def run_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol=None, blocksize=None, ancillary=0,
              landmask=None, altitude=None, add_noise=None, filename = None, ext=None, tmpdir=None, outdir=None, overwrite=None,
              datasets=None, compress=None, format=None, multiprocessing=None, dir_base=None, calib=None, normalize=None):
-
     """
-    dirname: This is a string representing the name of the '.Sen3' folder algorithm will be run on
-    filetype: This is a boolean to choose what filetype the output is in. True = nc file, False = hdf file
+    Run the POLYMER algorithm on a given directory.
+
+    Args:
+        dirname (str): Directory name containing input data for POLYMER.
+        filetype (bool): If True, output is .nc file; if False, .hdf file. Default is True.
+        sline (int): Start line for data processing. Default is 0.
+        eline (int): End line for data processing. Default is -1.
+        scol (int): Start column for data processing. Default is 0.
+        ecol (int): End column for data processing. Default is -1.
+        blocksize (int): Block size for processing. Default is 198.
+        ancillary (object): An ancillary data instance (Ancillary_NASA, Ancillary_ERA). Default is None.
+        landmask (Union[str, None, GSW object]): Landmask information. Can be a string, None, or a GSW object.
+            Default is None.
+        altitude (Union[float, DEM object]): Altitude parameter. Can be a float, or a DEM object.
+            Default is 0.
+        add_noise (bool):
+            Whether to add simulated noise to the radiance data. When set to True,
+            random noise is added to the radiance values to simulate measurement
+            uncertainty or sensor noise.
+            Default is None.
+        filename (str):
+            Output filename. If None, determine filename from level1 by using output directory.
+            Default is None.
+        ext (str): Output file extension. Default is '.nc'.
+        tmpdir (str): Path of temporary directory. Default is None.
+        outdir (str): Output directory. Default is None.
+        overwrite (bool): Overwrite existing file. Default is False.
+        datasets (list): List of datasets to include in level 2. Default is None.
+        compress (bool): Activate compression. Default is True.
+        format (str):
+            Underlying file format as specified in netcdf's Dataset:
+                one of 'NETCDF4', 'NETCDF4_CLASSIC', 'NETCDF3_CLASSIC' or 'NETCDF3_64BIT'
+            Default is 'NETCDF4_CLASSIC'.
+        multiprocessing (int):
+            Number of threads to use for processing
+                - 0: Single thread (multiprocessing disactivated)
+                - 1 or greater: Use as many threads as there are CPUs on local machine
+            Default is 0.
+        dir_base (str): Location of base directory to locate auxiliary data. Default is 'ANCILLARY/METEO'.
+        calib (dict):
+            A dictionary for applying calibration coefficients.
+            Default is None.
+        normalize (int):
+            Select water reflectance normalization:
+                - 0: No geometry nor wavelength normalization
+                - 1: Apply normalization of the water reflectance at nadir-nadir
+                - 2: Apply wavelength normalization for MERIS and OLCI
+                - 3: Apply both geometry and wavelength normalization
+            Default is None.
+
+    Returns:
+        None
     """
 
     if (ancillary == 0):
@@ -93,7 +142,6 @@ def run_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol=
 if __name__ == "__main__":
     if len(sys.argv) >= 3 and sys.argv[1] == "run_polymer":
         dirname = sys.argv[2]
-        #filetype = sys.argv[3].lower() == "true"
         filetype = bool(sys.argv[sys.argv.index("--filetype") + 1]) if "--filetype" in sys.argv else None
         sline = int(sys.argv[sys.argv.index("--sline") + 1]) if "--sline" in sys.argv else None
         eline = int(sys.argv[sys.argv.index("--eline") + 1]) if "--eline" in sys.argv else None
