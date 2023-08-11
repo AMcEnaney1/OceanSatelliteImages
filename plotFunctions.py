@@ -18,6 +18,20 @@ import satFunctions
 
 
 def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
+    """
+    Plot a list of ndarrays as images with titles and custom coordinate labels.
+
+    Args:
+        ndarrays (list): List of ndarrays to plot.
+        titles (list): List of titles corresponding to each ndarray.
+        coordinates (tuple): Tuple of coordinates (lon_left, lat_bottom, lon_right, lat_top).
+        num_columns (int): Number of columns in the subplot grid. Default is 3.
+        save_path (str): Path to save the plot image. Default is None.
+
+    Returns:
+        None
+    """
+
     if len(ndarrays) != len(titles):
         raise ValueError("Number of ndarrays and titles must be the same.")
 
@@ -70,6 +84,22 @@ def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
     plt.close()
 
 def plot_csv_data(csv_path, down_path, column_name, ylabel, corner_text, title=None, fah=False):
+    """
+    Plot data from a CSV file and save the plot as an image.
+
+    Args:
+        csv_path (str): Path to the CSV file.
+        down_path (str): Path where the plot image will be saved.
+        column_name (str): Name of the column to plot from the CSV file.
+        ylabel (str): Label for the y-axis.
+        corner_text (str): Text to display in the upper-right corner of the plot.
+        title (str): Title for the plot. If None, a default title is generated.
+        fah (bool): If True, convert temperature values from Kelvin to Fahrenheit.
+
+    Returns:
+        None
+    """
+
     xtickCutOff = 20
     corner_text = str(corner_text)
 

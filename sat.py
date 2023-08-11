@@ -33,8 +33,8 @@ def main():
         ## The resolution is defined right before the call before being passed along with everything else.
 
         """
-        Examples of individual band requests from the SentinelHub API
-            These download the specified images from the specified bands and create csvs of the data collected
+        Examples of individual band requests from the SentinelHub API.
+            These download the specified images from the specified bands and create csvs of the data collected.
         """
 
         # Thermal Data
@@ -70,8 +70,8 @@ def main():
                           request_function=requestFunctions.get_oxygen_request, createImages=createImages[i])
 
         """
-        Examples of requesting multiple bands at once from the SentinHub API
-                These download the specified images from the specified bands and create csvs of the data collected
+        Examples of requesting multiple bands at once from the SentinHub API.
+                These download the specified images from the specified bands and create csvs of the data collected.
         """
 
         resolution = 20  # Resolution for all bands from s2l2a images, actual res is 10 or 20,so I just went to the larger one
@@ -98,7 +98,16 @@ def main():
                                     'Average Chlorophyll Concentration vs. Time')
 
         """
-        This is an example of how a model to get a specific parameter such as chlorophyll would be implemented and called
+        This is an example of downloading data using the sentinelsat API, this is done automatically if you
+        are doing this through the 'model_routine_space_eff()' function.
+            Similar to when using the SeninelHub API we give it the coordinates, dates, download folder and a function.
+        """
+
+        satFunctions.sentinelsat_routine(farm_coords_wgs84, date_tuples, outputs_folder,
+                                         request_function=sentinelsatRequests.get_olci)
+
+        """
+        This is an example of how a model to get a specific parameter such as chlorophyll would be implemented and called.
             We pass the model we created in 'models.py' (already has function to allow for implem. of linear models),
             and the request function we created, in this case for the Sentinelsat API.
             
@@ -107,7 +116,8 @@ def main():
         """
 
         models.model_routine_space_eff(farm_coords_wgs84[i], date_tuples, projectName[i], models.chlor,
-                             (poly_dir_app[i] + '/'), request_function=sentinelsatRequests.get_olci_singlular, npy_save_to=npy_save_to[i])
+                             (poly_dir_app[i] + '/'), request_function=sentinelsatRequests.get_olci_singlular,
+                                       npy_save_to=npy_save_to[i])
 
     # Deleting the files we made earlier
     satFunctions.del_file('conda_source_path.txt')

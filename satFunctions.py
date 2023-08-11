@@ -29,49 +29,77 @@ import subprocess
 
 ## End of Imports
 
-def most_recent_folder(folder_paths):
-    most_recent_time = 0
-    most_recent_folder = None
+def run_polymer_on_folder(poly_dir, satellite_type=0, filetype=True, sline=None, eline=None, scol=None, ecol=None,
+                          blocksize=None, resolution=None, ancillary=0, landmask=None, altitude=None, add_noise=None,
+                          srf_file=None, use_srf=None, filename=None, ext=None, tmpdir=None, outdir=None, overwrite=None,
+                          datasets=None, compress=None, format=None, multiprocessing=None, dir_base=None, calib=None,
+                          normalize=None):
+    """
+    Calls the POLYMER algorithm on an entire folder of snapshots by calling a bash script in a subprocess that
+    then calls a python script, which parses arguments before finally passing them to POLYMER.
 
-    for i in range(len(folder_paths)):
-        if (folder_paths[i].endswith('.DS_Store')):
-            folder_paths.pop(i)
+    Args:
+        poly_dir (str): Directory containing folders with snapshots for POLYMER processing.
+        satellite_type (int): Select the satellite that the data came from:
+                - 0: OLCI
+                - 1: MSI
+            Default is 0.
+        filetype (bool): If True, output is .nc file; if False, .hdf file. Default is True.
+        sline (int): Start line for data processing. Default is None.
+        eline (int): End line for data processing. Default is None.
+        scol (int): Start column for data processing. Default is None.
+        ecol (int): End column for data processing. Default is None.
+        blocksize (int): Block size for processing. Default is None.
+        resolution (str): Resolution of data, either '60', '20' or '10' (in m). Default is None.
+        ancillary (int): Ancillary data option. If 0, use NASA data; if None, no ancillary data. Default is 0.
+        landmask (Union[str, None, GSW object]): Landmask information. Can be a string, None, or a GSW object.
+            Default is None.
+        altitude (Union[float, DEM object]): Altitude parameter. Can be a float, or a DEM object.
+            Default is None.
+        add_noise (bool):
+            Whether to add simulated noise to the radiance data. When set to True,
+            random noise is added to the radiance values to simulate measurement
+            uncertainty or sensor noise.
+            Default is None.
+        srf_file (str): Spectral response function. By default, it will use:
+            auxdata/msi/S2-SRF_COPE-GSEG-EOPG-TN-15-0007_3.0_S2A.csv for S2A
+            auxdata/msi/S2-SRF_COPE-GSEG-EOPG-TN-15-0007_3.0_S2B.csv for S2B
+        use_srf (bool): Whether to calculate the bands central wavelengths from the SRF or to use fixed ones.
+            Default is None.
+        filename (str):
+            Output filename. If None, determine filename from level1 by using output directory.
+            Default is None.
+        ext (str): Output file extension, such as '.nc'. Default is None.
+        tmpdir (str): Path of temporary directory. Default is None.
+        outdir (str): Output directory. Default is None.
+        overwrite (bool): Overwrite existing file. Default is None.
+        datasets (list): List of datasets to include in level 2. Default is None.
+        compress (bool): Activate compression. Default is None.
+        format (str):
+            Underlying file format as specified in netcdf's Dataset:
+                one of 'NETCDF4', 'NETCDF4_CLASSIC', 'NETCDF3_CLASSIC' or 'NETCDF3_64BIT'
+            Default is None.
+        multiprocessing (int):
+            Number of threads to use for processing
+                - 0: Single thread (multiprocessing disactivated)
+                - 1 or greater: Use as many threads as there are CPUs on local machine
+            Default is None.
+        dir_base (str): Location of base directory to locate auxiliary data. Default is None, will use
+            'ANCILLARY/METEO'.
+        calib (dict):
+            A dictionary for applying calibration coefficients.
+            Default is None.
+        normalize (int):
+            Select water reflectance normalization:
+                - 0: No geometry nor wavelength normalization
+                - 1: Apply normalization of the water reflectance at nadir-nadir
+                - 2: Apply wavelength normalization for MERIS and OLCI
+                - 3: Apply both geometry and wavelength normalization
+            Default is None.
 
-    for folder_path in folder_paths:
-        if os.path.isdir(folder_path):
-            creation_time = os.path.getctime(folder_path)
-            if creation_time > most_recent_time:
-                most_recent_time = creation_time
-                most_recent_folder = folder_path
-
-    return most_recent_folder
-
-def delete_folder_with_contents(folder_name):
-    try:
-        shutil.rmtree(folder_name)
-        print(f"Folder '{folder_name}' and its contents have been deleted successfully.")
-    except Exception as e:
-        print(f"An error occurred while deleting '{folder_name}': {e}")
-
-def get_folder_name(path):
-    # Get a list of all items (files and subfolders) within the given folder
-    items = os.listdir(path)
-
-    # Filter out only the subfolders
-    subfolders = [item for item in items if os.path.isdir(os.path.join(path, item))]
-
-    # Assuming there's only one subfolder, get its name
-    if len(subfolders) == 1:
-        singular_folder_name = subfolders[0]
-    else:
-        print("No singular folder found or multiple subfolders present.")
-
-    return singular_folder_name
-
-def run_polymer_on_folder(poly_dir, filetype=True, sline=None, eline=None, scol=None, ecol=None, blocksize=None,
-                            ancillary=0, landmask=None, altitude=None, add_noise=None, filename=None,
-                            ext=None, tmpdir=None, outdir=None, overwrite=None, datasets=None, compress=None,
-                            format=None, multiprocessing=None, dir_base=None, calib=None, normalize=None):
+    Returns:
+        None
+    """
 
     for folder in os.listdir(poly_dir):
         folder_path = os.path.join(poly_dir, folder)
@@ -84,17 +112,80 @@ def run_polymer_on_folder(poly_dir, filetype=True, sline=None, eline=None, scol=
                             ext=ext, tmpdir=tmpdir, outdir=outdir, overwrite=overwrite, datasets=datasets, compress=compress,
                             format=format, multiprocessing=multiprocessing, dir_base=dir_base, calib=calib, normalize=normalize)
 
-def call_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol=None, blocksize=None,
-                            ancillary=0, landmask=None, altitude=None, add_noise=None, filename=None,
-                            ext=None, tmpdir=None, outdir=None, overwrite=None, datasets=None, compress=None,
-                            format=None, multiprocessing=None, dir_base=None, calib=None, normalize=None):
-
+def call_polymer(dirname, satellite_type=0, filetype=True, sline=None, eline=None, scol=None, ecol=None,
+                          blocksize=None, resolution=None, ancillary=0, landmask=None, altitude=None, add_noise=None,
+                          srf_file=None, use_srf=None, filename=None, ext=None, tmpdir=None, outdir=None, overwrite=None,
+                          datasets=None, compress=None, format=None, multiprocessing=None, dir_base=None, calib=None,
+                          normalize=None):
     """
-    filetype: bool, if True then output is .nc file, if False, then .hdf file
-    ancillary: float, if 0 then ancillary data from NASA is used, if None, then no ancillary data is used
-    """
+    Calls the POLYMER algorithm on a single snapshot using subprocess.
 
-    args = ["./run_polymer.sh", "run_polymer", dirname] # Initialize with required arguments
+    Args:
+        dirname (str): Directory name containing input data for POLYMER.
+        satellite_type (int): Select the satellite that the data came from:
+                - 0: OLCI
+                - 1: MSI
+            Default is 0.
+        filetype (bool): If True, output is .nc file; if False, .hdf file. Default is True.
+        sline (int): Start line for data processing. Default is None.
+        eline (int): End line for data processing. Default is None.
+        scol (int): Start column for data processing. Default is None.
+        ecol (int): End column for data processing. Default is None.
+        blocksize (int): Block size for processing. Default is None.
+        resolution (str): Resolution of data, either '60', '20' or '10' (in m). Default is None.
+        ancillary (int): Ancillary data option. If 0, use NASA data; if None, no ancillary data. Default is 0.
+        landmask (Union[str, None, GSW object]): Landmask information. Can be a string, None, or a GSW object.
+            Default is None.
+        altitude (Union[float, DEM object]): Altitude parameter. Can be a float, or a DEM object.
+            Default is None.
+        add_noise (bool):
+            Whether to add simulated noise to the radiance data. When set to True,
+            random noise is added to the radiance values to simulate measurement
+            uncertainty or sensor noise.
+            Default is None.
+        srf_file (str): Spectral response function. By default, it will use:
+            auxdata/msi/S2-SRF_COPE-GSEG-EOPG-TN-15-0007_3.0_S2A.csv for S2A
+            auxdata/msi/S2-SRF_COPE-GSEG-EOPG-TN-15-0007_3.0_S2B.csv for S2B
+        use_srf (bool): Whether to calculate the bands central wavelengths from the SRF or to use fixed ones.
+            Default is None.
+        filename (str):
+            Output filename. If None, determine filename from level1 by using output directory.
+            Default is None.
+        ext (str): Output file extension, such as '.nc'. Default is None.
+        tmpdir (str): Path of temporary directory. Default is None.
+        outdir (str): Output directory. Default is None.
+        overwrite (bool): Overwrite existing file. Default is None.
+        datasets (list): List of datasets to include in level 2. Default is None.
+        compress (bool): Activate compression. Default is None.
+        format (str):
+            Underlying file format as specified in netcdf's Dataset:
+                one of 'NETCDF4', 'NETCDF4_CLASSIC', 'NETCDF3_CLASSIC' or 'NETCDF3_64BIT'
+            Default is None.
+        multiprocessing (int):
+            Number of threads to use for processing
+                - 0: Single thread (multiprocessing disactivated)
+                - 1 or greater: Use as many threads as there are CPUs on local machine
+            Default is None.
+        dir_base (str): Location of base directory to locate auxiliary data. Default is None, will use
+            'ANCILLARY/METEO'.
+        calib (dict):
+            A dictionary for applying calibration coefficients.
+            Default is None.
+        normalize (int):
+            Select water reflectance normalization:
+                - 0: No geometry nor wavelength normalization
+                - 1: Apply normalization of the water reflectance at nadir-nadir
+                - 2: Apply wavelength normalization for MERIS and OLCI
+                - 3: Apply both geometry and wavelength normalization
+            Default is None.
+
+    Returns:
+        None
+    """
+    if (satellite_type == 0):
+        args = ["./run_polymer.sh", "run_polymer", dirname] # Initialize with required arguments
+    elif (satellite_type == 1):
+        args = ["./run_polymer_msi.sh", "run_polymer", dirname]  # Initialize with required arguments
 
     # Append optional arguments only if they are not None
     if filetype is not None:
@@ -109,6 +200,8 @@ def call_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol
         args.extend(["--ecol", str(ecol)])
     if blocksize is not None:
         args.extend(["--blocksize", str(blocksize)])
+    if resolution is not None:
+        args.extend(["--resolution", str(resolution)])
     if ancillary is not None:
         args.extend(["--ancillary", str(ancillary)])
     if landmask is not None:
@@ -117,6 +210,10 @@ def call_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol
         args.extend(["--altitude", str(altitude)])
     if add_noise is not None:
         args.extend(["--add_noise", str(add_noise)])
+    if srf_file is not None:
+        args.extend(["--srf_file", str(srf_file)])
+    if use_srf is not None:
+        args.extend(["--use_srf", str(use_srf)])
     if filename is not None:
         args.extend(["--filename", filename])
     if ext is not None:
@@ -147,7 +244,85 @@ def call_polymer(dirname, filetype=True, sline=None, eline=None, scol=None, ecol
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
 
-def create_batch_folders(save_path): # Takes in path terminating with file
+def most_recent_folder(folder_paths):
+    """
+    Fetches the most recently created folder and returns the absolute path.
+
+    Args:
+        folder_paths (list): List of folder paths to search for the most recent one.
+
+    Returns:
+        str: Absolute path of the most recently created folder.
+    """
+
+    most_recent_time = 0
+    most_recent_folder = None
+
+    for i in range(len(folder_paths)):
+        if (folder_paths[i].endswith('.DS_Store')):
+            folder_paths.pop(i)
+
+    for folder_path in folder_paths:
+        if os.path.isdir(folder_path):
+            creation_time = os.path.getctime(folder_path)
+            if creation_time > most_recent_time:
+                most_recent_time = creation_time
+                most_recent_folder = folder_path
+
+    return most_recent_folder
+
+def delete_folder_with_contents(folder_name):
+    """
+    Deletes a folder along with all of its contents.
+
+    Args:
+        folder_name (str): Path of the folder to be deleted.
+
+    Returns:
+        None
+    """
+
+    try:
+        shutil.rmtree(folder_name)
+        print(f"Folder '{folder_name}' and its contents have been deleted successfully.")
+    except Exception as e:
+        print(f"An error occurred while deleting '{folder_name}': {e}")
+
+def get_folder_name(path):
+    """
+    Gets the name of a subfolder within the given folder.
+
+    Args:
+        path (str): Path of the folder to search for subfolders.
+
+    Returns:
+        str: Name of the subfolder.
+    """
+
+    items = os.listdir(path)
+
+    # Filter out only the subfolders
+    subfolders = [item for item in items if os.path.isdir(os.path.join(path, item))]
+
+    # Assuming there's only one subfolder, get its name
+    if len(subfolders) == 1:
+        singular_folder_name = subfolders[0]
+    else:
+        print("No singular folder found or multiple subfolders present.")
+
+    return singular_folder_name
+
+def create_batch_folders(save_path):
+    """
+    Create a series of nested folders based on the provided file path.
+
+    Args:
+        save_path (str): Path to the file, including the filename at the end.
+
+    Returns:
+        None
+    """
+
     folders = save_path.split('/')  # Gets names of required folders
 
     for i in range(len(folders) - 1):
@@ -160,6 +335,17 @@ def create_batch_folders(save_path): # Takes in path terminating with file
             create_folder(tmp_path2, folders[i])
 
 def sort_list_b_based_on_list_a(a, b):
+    """
+    Sort the elements in list 'b' based on their order in list 'a'.
+
+    Args:
+        a (list): The reference list with desired order.
+        b (list): The list to be sorted based on the order of list 'a'.
+
+    Returns:
+        list: The sorted list 'b' based on the order of list 'a'.
+    """
+
     # Create a dictionary to store the indices of elements in list 'a'
     index_dict = {value: index for index, value in enumerate(a)}
 
@@ -169,12 +355,32 @@ def sort_list_b_based_on_list_a(a, b):
     return sorted_b
 
 def del_file(file_path):
+    """
+    Delete a file at the specified file path.
+
+    Args:
+        file_path (str): Path to the file to be deleted.
+
+    Returns:
+        None
+    """
+
     try:
         os.remove(file_path)
     except OSError as e:
         print(f"Error: {e}")
 
 def get_surface_level_folders(folder_path):
+    """
+    Get a list of subfolder names in the specified folder (surface level only).
+
+    Args:
+        folder_path (str): Path to the folder where subfolders will be retrieved.
+
+    Returns:
+        list: List of subfolder names in the specified folder.
+    """
+
     try:
         # Get a list of all items (files and subfolders) in the specified folder
         all_items = os.listdir(folder_path)
@@ -188,6 +394,17 @@ def get_surface_level_folders(folder_path):
         return []
 
 def remove_overlap(current_working_directory, deeper_file_path):
+    """
+    Remove the overlapping portion of two file paths and return the new file path.
+
+    Args:
+        current_working_directory (str): Path to the current working directory.
+        deeper_file_path (str): Full file path to a location deeper within the directory structure.
+
+    Returns:
+        str: New file path with the overlapping portion removed.
+    """
+
     # Normalize the paths to handle different separators (e.g., / or \)
     current_working_directory = os.path.normpath(current_working_directory)
     deeper_file_path = os.path.normpath(deeper_file_path)
@@ -207,6 +424,18 @@ def remove_overlap(current_working_directory, deeper_file_path):
     return new_file_path
 
 def move_files_by_type(start_folder, destination_folder, file_type):
+    """
+    Move files of a specific type from a source folder to a destination folder.
+
+    Args:
+        start_folder (str): Path to the source folder where files will be moved from.
+        destination_folder (str): Path to the destination folder where files will be moved to.
+        file_type (str): File extension or type of files to be moved (e.g., '.txt', '.csv').
+
+    Returns:
+        None
+    """
+
     # Ensure the folders end with a path separator '/'
     start_folder = os.path.normpath(start_folder) + os.sep
     destination_folder = os.path.normpath(destination_folder) + os.sep
@@ -224,6 +453,17 @@ def move_files_by_type(start_folder, destination_folder, file_type):
             shutil.move(source_file_path, destination_file_path)
 
 def find_files_with_strings(folder_path, search_strings):
+    """
+    Find files in a folder that contain specific search strings in their names.
+
+    Args:
+        folder_path (str): Path to the folder where files will be searched.
+        search_strings (list): List of search strings to match in file names.
+
+    Returns:
+        list: List of file paths that match the search strings.
+    """
+
     # Create an empty list to store the matching file paths
     matching_files = []
 
@@ -236,6 +476,19 @@ def find_files_with_strings(folder_path, search_strings):
     return matching_files
 
 def calculate_and_save_result(npy_files, float_list, name, saveLoc):
+    """
+    Calculate a weighted sum using data from .npy files and save the result to a new .npy file.
+
+    Args:
+        npy_files (list): List of paths to .npy files containing data.
+        float_list (list): List of floating-point weights for each .npy file.
+        name (str): Name of the output .npy file (without extension).
+        saveLoc (str): Directory where the output .npy file will be saved.
+
+    Returns:
+        None
+    """
+
     if len(float_list) != len(npy_files) + 1:
         print(f"npy files: '{npy_files}'")
         print(f"float list: '{float_list}'")
@@ -256,6 +509,16 @@ def calculate_and_save_result(npy_files, float_list, name, saveLoc):
     np.save(savePath, result)
 
 def unzip_all_zip_files(directory):
+    """
+    Unzip all the .zip files in a directory and remove the original zip files (optional).
+
+    Args:
+        directory (str): Path to the directory containing .zip files.
+
+    Returns:
+        None
+    """
+
     # Iterate through all the files in the directory
     for filename in os.listdir(directory):
         filepath = os.path.join(directory, filename)
@@ -270,13 +533,34 @@ def unzip_all_zip_files(directory):
             os.remove(filepath)
 
 def move_elements_down_one(input_list):
+    """
+    Move elements in a list down by one position, creating an empty element at the beginning.
+
+    Args:
+        input_list (list): The input list to be shifted.
+
+    Returns:
+        list: A new list with elements shifted down by one position.
+    """
+
+    # Create a new list with an empty element at the beginning
     new_list = [''] + input_list[:-1]
     return new_list
 
-def bbox_to_WKT(bbox): # Converts a bounding box to well-known text representation form
+def bbox_to_WKT(bbox):
+    """
+    Convert a bounding box to a Well-Known Text (WKT) representation.
+
+    Args:
+        bbox (tuple): Bounding box coordinates as a tuple (min_x, min_y, max_x, max_y).
+
+    Returns:
+        str: Well-Known Text (WKT) representation of the bounding box.
+    """
     # https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
     # bbox is read in as a tuple, not a SentinelHub bbox type
 
+    # Convert the bounding box coordinates to WKT format using GeoJSON
     wkt_bbox = geojson_to_wkt({'type': 'Polygon', 'coordinates': [[
         [bbox[0], bbox[1]],
         [bbox[0], bbox[3]],
@@ -286,7 +570,20 @@ def bbox_to_WKT(bbox): # Converts a bounding box to well-known text representati
 
     return wkt_bbox
 
-def create_folder(path, folder_name, do_prints = False):
+
+def create_folder(path, folder_name, do_prints=False):
+    """
+    Create a folder with the given name in the specified path.
+
+    Args:
+        path (str): Path where the folder will be created.
+        folder_name (str): Name of the folder to be created.
+        do_prints (bool): Whether to print status messages (default is False).
+
+    Returns:
+        None
+    """
+
     # Combine the path and folder name
     folder_path = os.path.join(path, folder_name)
 
@@ -301,7 +598,20 @@ def create_folder(path, folder_name, do_prints = False):
             print(f"Folder '{folder_name}' already exists at '{folder_path}'")
 
 
-def convert_all_npy_and_nc(path, preface="image", date_tuples=None, project_name='name', folder_name = 'sen'):
+def convert_all_npy_and_nc(path, preface="image", date_tuples=None, project_name='name', folder_name='sen'):
+    """
+    Convert multiple .npy files to NetCDF (.nc) format, organized in folders.
+
+    Args:
+        path (str): Path to the directory containing the .npy files.
+        preface (str): Prefix for filenames (default is "image").
+        date_tuples (list of tuple): List of tuples, each containing start and end dates (default is None).
+        project_name (str): Project name to be included in the filenames (default is 'name').
+        folder_name (str): Name of the subfolder where converted files will be saved (default is 'sen').
+
+    Returns:
+        None
+    """
 
     for i in range(len(date_tuples)):
         tmp = str(date_tuples[i]) + '_' + preface + '_' + project_name + '_' + folder_name
@@ -324,6 +634,17 @@ def convert_all_npy_and_nc(path, preface="image", date_tuples=None, project_name
         convert_npy_to_nc(full_filename1 + 'npy', full_filename2 + 'nc')
 
 def convert_npy_to_nc(npy_path, download_path):
+    """
+    Convert a NumPy array saved as .npy file to a NetCDF (.nc) file.
+
+    Args:
+        npy_path (str): Path to the input .npy file.
+        download_path (str): Path to save the output NetCDF file.
+
+    Returns:
+        None
+    """
+
     # Load npy file
     np_array = load_npy_file(npy_path)
 
@@ -343,7 +664,17 @@ def convert_npy_to_nc(npy_path, download_path):
     # Close the netCDF file
     nc_file.close()
 
-def process_directory(directory, save_to = None):
+def process_directory(directory, save_to=None):
+    """
+    Convert NetCDF (.nc) files in a directory and its subdirectories to NumPy arrays.
+
+    Args:
+        directory (str): Path to the directory containing .nc files.
+        save_to (str): Directory path to save the converted .npy files (default is None).
+
+    Returns:
+        None
+    """
 
     # Get a list of all files with the '.nc' extension in the specified directory and its subdirectories
     nc_files = glob.glob(os.path.join(directory, '**', '*.nc'), recursive=True)
@@ -353,6 +684,17 @@ def process_directory(directory, save_to = None):
         convert_nc_to_npy(nc_file, save_to)
 
 def convert_nc_to_npy(nc_file_path, save_to=None):
+    """
+    Convert a NetCDF (.nc) file to a NumPy array saved as .npy file.
+
+    Args:
+        nc_file_path (str): Path to the input .nc file.
+        save_to (str): Directory path to save the converted .npy file (default is None).
+
+    Returns:
+        None
+    """
+
     try:
         # Open the NetCDF file
         dataset = nc.Dataset(nc_file_path)
@@ -393,7 +735,18 @@ def convert_nc_to_npy(nc_file_path, save_to=None):
         if not (isinstance(e, FileNotFoundError) and "No such file or directory: 'None'" in str(e)):
             print("An error occurred:", e)
 
+
 def load_npy_file(file_path):
+    """
+    Load a NumPy array from a .npy file.
+
+    Args:
+        file_path (str): Path to the input .npy file.
+
+    Returns:
+        np.ndarray: Loaded NumPy array.
+    """
+
     try:
         array = np.load(file_path)
         return array
@@ -405,29 +758,90 @@ def load_npy_file(file_path):
         print(f"Error: An error occurred while loading file '{file_path}': {str(e)}")
 
 def remove_file_extension(file_path):
+    """
+    Remove the file extension from a given file path.
+
+    Args:
+        file_path (str): File path from which the extension will be removed.
+
+    Returns:
+        str: File name without the extension.
+    """
+
     filename, file_extension = os.path.splitext(file_path)
     return filename
 
 def kelvin_to_fahrenheit(kelvin):
+    """
+    Convert temperature in Kelvin to Fahrenheit.
+
+    Args:
+        kelvin (float): Temperature in Kelvin.
+
+    Returns:
+        float: Temperature in Fahrenheit.
+    """
+
     fahrenheit = (kelvin - 273.15) * 9/5 + 32
     return fahrenheit
 
 def get_timeslots(start, end, n_chunks):
+    """
+    Divide a time period into equal-sized time slots.
+
+    Args:
+        start (datetime): Start datetime of the time period.
+        end (datetime): End datetime of the time period.
+        n_chunks (int): Number of equal-sized time slots.
+
+    Returns:
+        list of tuple: List of tuples representing start and end datetime for each time slot.
+    """
+
     tdelta = (end - start) / n_chunks
     edges = [(start + i * tdelta).date().isoformat() for i in range(n_chunks)]
     date_tuples = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
 
     return date_tuples
 
+
 def create_blank_file(filename):
+    """
+    Create an empty file if it doesn't already exist.
+
+    Args:
+        filename (str): Name of the file to be created.
+
+    Returns:
+        None
+    """
+
+    # Split the filename into name and extension
     _, file_extension = os.path.splitext(filename)
+
     if os.path.exists(filename):
         print(f"Error: File '{filename}' already exists, continuing. If you are seeing this something went wrong.")
     else:
         with open(filename, 'w'):
             pass
 
-def write_data_to_csv(ndarrays, date_tuples, csv_path):
+
+def write_data_to_csv(ndarrays,  # List of ndarrays containing data to be written to CSV.
+                      date_tuples,  # List of tuples, each containing start and end dates.
+                      csv_path  # Path to the CSV file where data will be written.
+                      ):
+    """
+    Write data from ndarrays to a CSV file, including statistics for each date range.
+
+    Args:
+        ndarrays (list of np.ndarray): List of ndarrays containing data to be written to CSV.
+        date_tuples (list of tuple): List of tuples, each containing start and end dates.
+        csv_path (str): Path to the CSV file where data will be written.
+
+    Returns:
+        None
+    """
+
     # Prepare the data for writing to CSV
     data = []
     for date, arr in zip(date_tuples, ndarrays):
@@ -451,6 +865,16 @@ def write_data_to_csv(ndarrays, date_tuples, csv_path):
         writer.writerows(data)
 
 def has_matching_header(csv_path):
+    """
+    Check if a CSV file has a matching header with expected column names.
+
+    Args:
+        csv_path (str): Path to the CSV file to be checked.
+
+    Returns:
+        bool: True if the header matches the expected column names, False otherwise.
+    """
+
     with open(csv_path, 'r') as csvfile:
         reader = csv.reader(csvfile)
         header_row = next(reader, [])
@@ -459,6 +883,16 @@ def has_matching_header(csv_path):
 
 
 def sort_csv_by_date(csv_file):
+    """
+    Sort a CSV file by date in the first column.
+
+    Args:
+        csv_file (str): Path to the CSV file to be sorted.
+
+    Returns:
+        None
+    """
+
     temp_file = 'temp.csv'
 
     with open(csv_file, 'r') as file:
@@ -478,7 +912,27 @@ def sort_csv_by_date(csv_file):
 
     shutil.move(temp_file, csv_file)
 
-def save_ndarrays_as_png(ndarrays, path, preface="image", date_tuples=None, project_name='name'):
+
+def save_ndarrays_as_png(ndarrays,  # List of ndarrays to be saved as PNGs.
+                         path,  # Directory path where PNG files will be saved.
+                         preface="image",  # Prefix for filenames (default is "image").
+                         date_tuples=None,  # List of tuples, each containing start and end dates (default is None).
+                         project_name='name'  # Project name (default is 'name').
+                         ):
+    """
+    Save ndarrays as PNG image files with optional date-based filenames.
+
+    Args:
+        ndarrays (list of np.ndarray): List of ndarrays to be saved as PNGs.
+        path (str): Directory path where PNG files will be saved.
+        preface (str): Prefix for filenames (default is "image").
+        date_tuples (list of tuple): List of tuples, each containing start and end dates (default is None).
+        project_name (str): Project name (default is 'name').
+
+    Returns:
+        None
+    """
+
     # Create the directory if it doesn't exist
     if not os.path.exists(path):
         os.makedirs(path)
@@ -510,7 +964,26 @@ def save_ndarrays_as_png(ndarrays, path, preface="image", date_tuples=None, proj
         full_filename = os.path.join(path, filename)
         image.save(full_filename)
 
-def save_ndarrays_as_npy(ndarrays, path, preface="array", date_tuples=None, project_name='name'):
+def save_ndarrays_as_npy(ndarrays,  # List of ndarrays to be saved.
+                         path,  # Directory path where .npy files will be saved.
+                         preface="array",  # Prefix for filenames (default is "array").
+                         date_tuples=None,  # List of tuples, each containing start and end dates (default is None).
+                         project_name='name'  # Project name (default is 'name').
+                         ):
+    """
+    Save ndarrays as .npy files with optional date-based filenames.
+
+    Args:
+        ndarrays (list of np.ndarray): List of ndarrays to be saved.
+        path (str): Directory path where .npy files will be saved.
+        preface (str): Prefix for filenames (default is "array").
+        date_tuples (list of tuple): List of tuples, each containing start and end dates (default is None).
+        project_name (str): Project name (default is 'name').
+
+    Returns:
+        None
+    """
+
     # Create the directory if it doesn't exist
     if not os.path.exists(path):
         os.makedirs(path)
@@ -531,7 +1004,26 @@ def save_ndarrays_as_npy(ndarrays, path, preface="array", date_tuples=None, proj
         np.save(full_filename, arr)
 
 
-def populate_text_file(date_tuples, file_extension, path, preface, project_name = 'name'):
+def populate_text_file(date_tuples,  # List of tuples, each containing start and end dates.
+                       file_extension,  # File extension for filenames.
+                       path,  # File path to the text file.
+                       preface,  # Prefix for filenames.
+                       project_name='name'  # Project name (default is 'name').
+                       ):
+    """
+    Populate a text file with generated filenames based on date tuples.
+
+    Args:
+        date_tuples (list of tuple): A list of tuples, each containing start and end dates.
+        file_extension (str): File extension for filenames.
+        path (str): File path to the text file.
+        preface (str): Prefix for filenames.
+        project_name (str): Project name (default is 'name').
+
+    Returns:
+        None
+    """
+
     # Open the text file in append mode
     with open(path, "a") as file:
         # Iterate over the date tuples
@@ -554,7 +1046,24 @@ def populate_text_file(date_tuples, file_extension, path, preface, project_name 
             file.write(filename + "\n")
 
 
-def check_files_exist(date_tuples, file_extension, directory_path, preface):
+def check_files_exist(date_tuples,  # List of tuples, each containing start and end dates.
+                      file_extension,  # File extension to check.
+                      directory_path,  # Directory path where files are expected to exist.
+                      preface  # Prefix for filenames.
+                      ):
+    """
+    Check for the existence of files with specific names in a directory.
+
+    Args:
+        date_tuples (list of tuple): A list of tuples, each containing start and end dates.
+        file_extension (str): File extension to check.
+        directory_path (str): Directory path where files are expected to exist.
+        preface (str): Prefix for filenames.
+
+    Returns:
+        list of str: List of filenames that do not exist in the specified directory.
+    """
+
     non_existing_files = []
 
     for i, (start_date, end_date) in enumerate(date_tuples):
@@ -566,7 +1075,28 @@ def check_files_exist(date_tuples, file_extension, directory_path, preface):
 
     return non_existing_files
 
-def check_files_exist_in_text_file(date_tuples, file_extension, file_path, preface, project):
+
+def check_files_exist_in_text_file(date_tuples,  # List of tuples, each containing start and end dates.
+                                   file_extension,  # File extension to check.
+                                   file_path,  # Path to the text file containing existing filenames.
+                                   preface,  # Prefix for filenames.
+                                   project  # Project name.
+                                   ):
+    """
+    Check for the existence of files listed in a text file.
+    Used for log file, so extra API calls are not used when downloading data from the SentinelHub API.
+
+    Args:
+        date_tuples (list): A list of tuples, each containing start and end dates.
+        file_extension (str): File extension to check.
+        file_path (str): Path to the text file containing existing filenames.
+        preface (str): Prefix for filenames.
+        project (str): Project name.
+
+    Returns:
+        list: List of filenames that do not exist in the text file.
+    """
+
     # Read the contents of the text file
     with open(file_path, "r") as file:
         existing_files = file.read().splitlines()
@@ -585,6 +1115,19 @@ def check_files_exist_in_text_file(date_tuples, file_extension, file_path, prefa
     return non_existing_files
 
 def reshape_data(data, p):
+    """
+    Reshape data arrays to extract a specific slice along a specified axis.
+
+    Args:
+        data (list of np.ndarray): List of data arrays to be reshaped.
+        p (int): Index along the third axis to extract from each data array.
+
+    Returns:
+        list of np.ndarray: List of reshaped data arrays, each containing the specified slice.
+    """
+    # Used for when a SentinelHub request has multiple bands.
+    # This reshapes the data so that each band can be analyzed separately.
+
     reshaped_data = []
     for arr in data:
         reshaped_arr = np.transpose(arr, axes=(0, 1, 2))
@@ -592,7 +1135,23 @@ def reshape_data(data, p):
         reshaped_data.append(reshaped_arr)
     return reshaped_data
 
-def sentinelsat_routine(bbox, date_tuples, download_directory, request_function):
+def sentinelsat_routine(bbox,  # Bounding box coordinates [min_lon, min_lat, max_lon, max_lat].
+                        date_tuples,  # List of tuples, each containing start and end dates for data retrieval.
+                        download_directory,  # Directory where downloaded zip files will be saved.
+                        request_function  # Function used for making API requests and downloading zips.
+                        ):
+    """
+    Routine for using SentinelSat API to download and process Sentinel data.
+
+    Args:
+        bbox (list): Bounding box coordinates [min_lon, min_lat, max_lon, max_lat].
+        date_tuples (list): A list of tuples, each containing start and end dates for data retrieval.
+        download_directory (str): Directory where downloaded zip files will be saved.
+        request_function (function): Function used for making API requests and downloading zip files.
+
+    Returns:
+        None
+    """
 
     tmp = download_directory.split('/')
     tmp = move_elements_down_one(tmp)
@@ -604,8 +1163,46 @@ def sentinelsat_routine(bbox, date_tuples, download_directory, request_function)
 
     unzip_all_zip_files(download_directory)  # Unzips all the folders, so we have folders of .nc files, also deletes zips
 
-def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
-            figure_save_path, csvpath, operext, project_name, request_function, createImages = False, i=0, as_nc = False):
+
+def routine(farm_bbox,  # Bounding box of the farm area.
+            farm_size,  # Size of the farm area.
+            date_tuples,  # List of tuples, each containing start and end dates for data retrieval.
+            sat_image_save_path,  # Directory where satellite images will be saved.
+            operations_save_path,  # Directory where operation log file will be saved.
+            preface,  # Prefix for file names.
+            farm_coords_wgs84,  # Bounding box coordinates [min_lon, min_lat, max_lon, max_lat] in WGS84.
+            figure_save_path,  # Directory where figures will be saved (if applicable).
+            csvpath,  # File path for CSV data.
+            operext,  # File extension for operation log and satellite images.
+            project_name,  # Name of the project.
+            request_function,  # Function used for making API requests.
+            createImages=False,  # Optional flag to create images.
+            i=0,  # Optional index for processing.
+            as_nc=False  # Optional flag to save images as NetCDF files.
+            ):
+    """
+    Core routine for downloading, processing, and saving satellite data. For the SentinelHub API.
+
+    Args:
+        farm_bbox (BBox): Bounding box of the farm area.
+        farm_size (tuple): Size of the farm area.
+        date_tuples (list): A list of tuples, each containing start and end dates for data retrieval.
+        sat_image_save_path (str): Directory where satellite images will be saved.
+        operations_save_path (str): Directory where the operation log file will be saved.
+        preface (str): Prefix for file names.
+        farm_coords_wgs84 (list): Bounding box coordinates [min_lon, min_lat, max_lon, max_lat] in WGS84.
+        figure_save_path (str): Directory where figures will be saved (if applicable).
+        csvpath (str): File path for CSV data.
+        operext (str): File extension for operation log and satellite images.
+        project_name (str): Name of the project.
+        request_function (function): Function used for making API requests.
+        createImages (bool): Flag to create images (default is False).
+        i (int): Index for processing (default is 0).
+        as_nc (bool): Flag to save images as NetCDF files (default is False).
+
+    Returns:
+        None
+    """
 
     # create a list of requests
     list_of_requests = [request_function(slot, farm_bbox, farm_size, config) for slot in date_tuples]
@@ -632,7 +1229,7 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
     name = date_tuples[0][0] + "_" + date_tuples[len(date_tuples)-1][1] + preface + '.png'
 
     # plot the data nicely
-    if (date_tuples < 52):
+    if (date_tuples < 52): # Ideally this would change with allocated ram amount
         plotFunctions.plot_ndarrays(data, date_tuples, farm_coords_wgs84, save_path=figure_save_path + project_name + '_' + name)
 
     ## Writing thermal data to csv
@@ -640,8 +1237,42 @@ def routine(farm_bbox, farm_size, date_tuples, sat_image_save_path, operations_s
     write_data_to_csv(data, date_tuples, csvpath)
     sort_csv_by_date(csvpath) # We do this here instead of in the write so its more efficient and can be moved
 
-def core(resolution, date_tuples, sat_image_save_path, operations_save_path, preface, farm_coords_wgs84,
-            figure_save_path, csvpath, operext, project_name, request_function, createImages = False, as_nc = False):
+
+def core(resolution,  # Spatial resolution for data retrieval.
+         date_tuples,  # List of tuples, each containing start and end dates for data retrieval.
+         sat_image_save_path,  # Directory where satellite images will be saved.
+         operations_save_path,  # Directory where operation log file will be saved.
+         preface,  # Prefix or list of prefixes for file names and paths.
+         farm_coords_wgs84,  # Bounding box coordinates [min_lon, min_lat, max_lon, max_lat] in WGS84.
+         figure_save_path,  # Directory where figures will be saved (if applicable).
+         csvpath,  # File path or list of file paths for CSV data.
+         operext,  # File extension for operation log and satellite images.
+         project_name,  # Name of the project.
+         request_function,  # Function used for making API requests.
+         createImages=False,  # Optional flag to create images.
+         as_nc=False  # Optional flag to save images as NetCDF files.
+         ):
+    """
+    Core function for managing data retrieval, processing, and storage. For the SentinelHub API.
+
+    Args:
+        resolution (int): Spatial resolution for data retrieval.
+        date_tuples (list): A list of tuples, each containing start and end dates for data retrieval.
+        sat_image_save_path (str): Directory where satellite images will be saved.
+        operations_save_path (str): Directory where the operation log file will be saved.
+        preface (str or list): Prefix or list of prefixes for file names and paths.
+        farm_coords_wgs84 (list): Bounding box coordinates [min_lon, min_lat, max_lon, max_lat] in WGS84.
+        figure_save_path (str): Directory where figures will be saved (if applicable).
+        csvpath (str or list): File path or list of file paths for CSV data.
+        operext (str): File extension for operation log and satellite images.
+        project_name (str): Name of the project associated with the bbox.
+        request_function (function): Function used for making API requests.
+        createImages (bool): Flag to create images (default is False).
+        as_nc (bool): Flag to save images as NetCDF files (default is False).
+
+    Returns:
+        None
+    """
 
     # Setting up resolution and stuff
 
