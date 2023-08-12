@@ -28,7 +28,7 @@ from datetime import datetime
 
 
 # Local module imports
-
+import utils.misc_functions as mf
 
 def create_batch_folders(save_path):
     """
@@ -40,6 +40,9 @@ def create_batch_folders(save_path):
     Returns:
         None
     """
+
+    # Get only deeper folders
+    save_path = mf.remove_overlap(os.getcwd(), save_path)
 
     folders = save_path.split('/')  # Gets names of required folders
 

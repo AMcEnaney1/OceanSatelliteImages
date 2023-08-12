@@ -173,8 +173,8 @@ def sentinelhub_routine(farm_bbox,  # Bounding box of the farm area.
     # We are going to download these now as pngs so we don't have to call the api every time,
                                         # only done if createImages variable is True, or as_nc is True
     if (createImages or as_nc):
-        io.save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
-        io.save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
+        sff.save_ndarrays_as_npy(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
+        sff.save_ndarrays_as_png(data, sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
 
     if (as_nc):
         fcf.convert_all_npy_and_nc(sat_image_save_path, preface, date_tuples=date_tuples, project_name = project_name)
