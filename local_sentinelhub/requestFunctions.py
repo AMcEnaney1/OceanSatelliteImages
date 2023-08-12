@@ -4,7 +4,7 @@
 
 ## Start of imports
 
-import evalscripts
+import local_sentinelhub.evalscripts as evalscripts
 from sentinelhub import (
     DataCollection,
     MimeType,

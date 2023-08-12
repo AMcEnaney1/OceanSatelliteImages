@@ -6,7 +6,7 @@
 
 from sentinelhub import SHConfig
 from sentinelsat import SentinelAPI
-import keys
+import conf.keys as keys
 
 ## End of imports
 
