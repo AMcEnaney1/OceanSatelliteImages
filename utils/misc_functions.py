@@ -10,6 +10,7 @@ Contents:
     - kelvin_to_fahrenheit: Function that converts Kelvin to Fahrenheit.
     - make_absolute_paths: Function that turns local paths into absolute paths, operates on lists.
     - make_absolute_paths_dict: Function that turns local paths into absolute paths, operates on dictionaries.
+    - make_absolute_paths_list: Does the same thing on a list of dictionaries
     - remove_overlap: Function to make an absolute path into a local path.
     - sort_list_b_based_on_list_a: Function to sort list.
 
@@ -91,11 +92,38 @@ def make_absolute_paths(file_paths):
 
 
 def make_absolute_paths_dict(file_paths_dict):
-    for key, path in file_paths_dict.items():
-        absolute_path = os.path.abspath(path)
-        if path.endswith('/'):  # Check if the original path had a trailing '/'
-            absolute_path += '/'  # Add the trailing '/' back
-        file_paths_dict[key] = absolute_path
+    for key, paths in file_paths_dict.items():
+        if isinstance(paths, str):
+            absolute_path = os.path.abspath(paths)
+            if paths.endswith('/'):  # Check if the original path had a trailing '/'
+                absolute_path += '/'  # Add the trailing '/' back
+            file_paths_dict[key] = absolute_path
+        elif isinstance(paths, list):
+            absolute_paths = []
+            for path in paths:
+                absolute_path = os.path.abspath(path)
+                if path.endswith('/'):  # Check if the original path had a trailing '/'
+                    absolute_path += '/'  # Add the trailing '/' back
+                absolute_paths.append(absolute_path)
+            file_paths_dict[key] = absolute_paths
+
+
+def make_absolute_paths_list(list_of_dicts):
+    for file_paths_dict in list_of_dicts:
+        for key, paths in file_paths_dict.items():
+            if isinstance(paths, str):
+                absolute_path = os.path.abspath(paths)
+                if paths.endswith('/'):  # Check if the original path had a trailing '/'
+                    absolute_path += '/'  # Add the trailing '/' back
+                file_paths_dict[key] = absolute_path
+            elif isinstance(paths, list):
+                absolute_paths = []
+                for path in paths:
+                    absolute_path = os.path.abspath(path)
+                    if path.endswith('/'):  # Check if the original path had a trailing '/'
+                        absolute_path += '/'  # Add the trailing '/' back
+                    absolute_paths.append(absolute_path)
+                file_paths_dict[key] = absolute_paths
 
 
 def get_timeslots(start, end, n_chunks):
