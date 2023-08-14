@@ -6,8 +6,8 @@
 
 from datetime import datetime, timedelta
 from collections import OrderedDict
-import satFunctions
-from configg import *
+from conf.config import *
+import utils.misc_functions as mf
 
 ## End of imports
 
@@ -27,7 +27,7 @@ def get_olci(date_tuples,  # List of tuples, each containing start and end dates
         None
     """
 
-    wkt_bbox = satFunctions.bbox_to_WKT(bbox)
+    wkt_bbox = mf.bbox_to_WKT(bbox)
 
     # Initialize an empty OrderedDict to store the products
     products = OrderedDict()
@@ -76,7 +76,7 @@ def get_olci_singular(date_tuple,     # Tuple containing start and end dates for
         None
     """
 
-    wkt_bbox = satFunctions.bbox_to_WKT(bbox)
+    wkt_bbox = mf.bbox_to_WKT(bbox)
 
     # Initialize an empty OrderedDict to store the products
     products = OrderedDict()

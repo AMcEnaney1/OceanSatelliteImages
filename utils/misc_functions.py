@@ -6,6 +6,7 @@ Date: 2023-08-11
 Description: Module containing misc functions.
 
 Contents:
+    - bbox_to_WKT: Function to convert bbox to WKT format.
     - get_timeslots: Function that turns start and end data into date tuples.
     - kelvin_to_fahrenheit: Function that converts Kelvin to Fahrenheit.
     - make_absolute_paths: Function that turns local paths into absolute paths, operates on lists.
@@ -22,9 +23,32 @@ Notes:
 import os
 
 # Third-party library imports
-
+from sentinelsat import geojson_to_wkt
 
 # Local module imports
+
+def bbox_to_WKT(bbox):
+    """
+    Convert a bounding box to a Well-Known Text (WKT) representation.
+
+    Args:
+        bbox (tuple): Bounding box coordinates as a tuple (min_x, min_y, max_x, max_y).
+
+    Returns:
+        str: Well-Known Text (WKT) representation of the bounding box.
+    """
+    # https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry
+    # bbox is read in as a tuple, not a SentinelHub bbox type
+
+    # Convert the bounding box coordinates to WKT format using GeoJSON
+    wkt_bbox = geojson_to_wkt({'type': 'Polygon', 'coordinates': [[
+        [bbox[0], bbox[1]],
+        [bbox[0], bbox[3]],
+        [bbox[2], bbox[3]],
+        [bbox[2], bbox[1]],
+        [bbox[0], bbox[1]]]]})
+
+    return wkt_bbox
 
 
 def sort_list_b_based_on_list_a(a, b):

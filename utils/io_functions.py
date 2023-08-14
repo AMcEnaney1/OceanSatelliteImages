@@ -6,6 +6,7 @@ Date: 2023-08-11
 Description: This module contains all the IO functions for this project.
 
 Contents:
+    - unzip_all_zip_files: Function to unzip all files in given directory.
     - create_batch_folders: Function that takes a path and creates all folders along it.
     - create_folder: Function that creates a folder.
     - create_blank_file: Function that creates a blank file at a passed location.
@@ -25,10 +26,35 @@ import shutil
 from datetime import datetime
 
 # Third-party library imports
-
+import zipfile
 
 # Local module imports
 import utils.misc_functions as mf
+
+def unzip_all_zip_files(directory):
+    """
+    Unzip all the .zip files in a directory and remove the original zip files (optional).
+
+    Args:
+        directory (str): Path to the directory containing .zip files.
+
+    Returns:
+        None
+    """
+
+    # Iterate through all the files in the directory
+    for filename in os.listdir(directory):
+        filepath = os.path.join(directory, filename)
+
+        # Check if the current item is a zip file
+        if filename.lower().endswith(".zip"):
+            # Create a ZipFile object and extract its contents
+            with zipfile.ZipFile(filepath, 'r') as zip_ref:
+                zip_ref.extractall(directory)
+
+            # Remove the original zip file if desired (optional)
+            os.remove(filepath)
+
 
 def create_batch_folders(save_path):
     """
