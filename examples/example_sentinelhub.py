@@ -6,7 +6,9 @@ Date: 2023-08-11
 Description: Python file for examples in basic functionality of the SentinelHub API with the project.
 
 Contents:
-    - basic_download: Example function for how to download a singular band of data.
+    - basic_download_single: Example function for how to download a singular band of data.
+    - basic_download_multi: Example function for how to download multiple bands of data.
+    - multiple_locations: Example function for how to download from multiple locations in one function.
 
 Notes:
     - This code is distributed under the MIT License. See LICENSE.txt for more details.

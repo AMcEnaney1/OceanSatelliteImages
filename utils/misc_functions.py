@@ -6,14 +6,16 @@ Date: 2023-08-11
 Description: Module containing misc functions.
 
 Contents:
+    - most_recent_folder: Function to determine the newest folder of passed folders.
+    - get_surface_level_folders: Function that returns the name of folders present at the surface level of passed path.
     - bbox_to_WKT: Function to convert bbox to WKT format.
-    - get_timeslots: Function that turns start and end data into date tuples.
-    - kelvin_to_fahrenheit: Function that converts Kelvin to Fahrenheit.
+    - sort_list_b_based_on_list_a: Function to sort list.
+    - remove_overlap: Function to make an absolute path into a local path.
     - make_absolute_paths: Function that turns local paths into absolute paths, operates on lists.
     - make_absolute_paths_dict: Function that turns local paths into absolute paths, operates on dictionaries.
-    - make_absolute_paths_list: Does the same thing on a list of dictionaries
-    - remove_overlap: Function to make an absolute path into a local path.
-    - sort_list_b_based_on_list_a: Function to sort list.
+    - make_absolute_paths_list: Does the same thing on a list of dictionaries.
+    - get_timeslots: Function that turns start and end data into date tuples.
+    - kelvin_to_fahrenheit: Function that converts Kelvin to Fahrenheit.
 
 Notes:
     - This code is distributed under the MIT License. See LICENSE.txt for more details.
@@ -26,6 +28,58 @@ import os
 from sentinelsat import geojson_to_wkt
 
 # Local module imports
+
+def most_recent_folder(folder_paths):
+    """
+    Fetches the most recently created folder and returns the absolute path.
+
+    Args:
+        folder_paths (list): List of folder paths to search for the most recent one.
+
+    Returns:
+        str: Absolute path of the most recently created folder.
+    """
+
+    most_recent_time = 0
+    most_recent_folder = None
+
+    for i in range(len(folder_paths)):
+        if (folder_paths[i].endswith('.DS_Store')):
+            folder_paths.pop(i)
+
+    for folder_path in folder_paths:
+        if os.path.isdir(folder_path):
+            creation_time = os.path.getctime(folder_path)
+            if creation_time > most_recent_time:
+                most_recent_time = creation_time
+                most_recent_folder = folder_path
+
+    return most_recent_folder
+
+
+def get_surface_level_folders(folder_path):
+    """
+    Get a list of subfolder names in the specified folder (surface level only).
+
+    Args:
+        folder_path (str): Path to the folder where subfolders will be retrieved.
+
+    Returns:
+        list: List of subfolder names in the specified folder.
+    """
+
+    try:
+        # Get a list of all items (files and subfolders) in the specified folder
+        all_items = os.listdir(folder_path)
+
+        # Filter out only the directories (subfolders) from the list
+        subfolders = [item for item in all_items if os.path.isdir(os.path.join(folder_path, item))]
+
+        return subfolders
+    except OSError as e:
+        print(f"Error: {e}")
+        return []
+
 
 def bbox_to_WKT(bbox):
     """

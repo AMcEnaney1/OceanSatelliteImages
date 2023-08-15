@@ -12,26 +12,9 @@ Notes:
     - This code is distributed under the MIT License. See LICENSE.txt for more details.
 """
 
-# Standard library imports
-import os
-
-# Third-party library imports
-from sentinelhub import (
-    CRS,
-    BBox,
-    SentinelHubDownloadClient,
-    bbox_to_dimensions,
-)
-import numpy as np
-
 # Local module imports
-from conf.config import *
 import utils.io_functions as io
-import utils.file_conversion_functions as fcf
-import utils.plot_functions as pf
-import utils.save_file_functions as sff
 import utils.array_operations as ao
-import utils.misc_functions as mf
 
 
 def sentinelsat_routine(bbox,  # Bounding box coordinates [min_lon, min_lat, max_lon, max_lat].

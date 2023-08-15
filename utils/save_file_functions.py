@@ -6,10 +6,10 @@ Date: 2023-08-11
 Description: This module contains all functions involving saving data as files for this project.
 
 Contents:
+    - populate_text_file: Funciton that write filenames to text file.
     - save_ndarrays_as_png: Function that takes a list of ndarrays and writes them to pngs.
     - save_ndarrays_as_npy: Function that takes a list of ndarrays and writes them to npys.
     - write_data_to_csv: Function that takes a list of ndarrays and writes some stats to a csv file.
-    - populate_text_file: Funciton that write filenames to text file.
 
 Notes:
     - This code is distributed under the MIT License. See LICENSE.txt for more details.
