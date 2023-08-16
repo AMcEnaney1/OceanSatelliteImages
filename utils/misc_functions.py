@@ -6,6 +6,9 @@ Date: 2023-08-11
 Description: Module containing misc functions.
 
 Contents:
+    - remove_file_extension: Function to remove file extension.
+    - find_files_with_strings: Function that finds files in folders with given strings in their name.
+    - most_recent_folders: Function to determine the newest folders of passed folders.
     - most_recent_folder: Function to determine the newest folder of passed folders.
     - get_surface_level_folders: Function that returns the name of folders present at the surface level of passed path.
     - bbox_to_WKT: Function to convert bbox to WKT format.
@@ -23,11 +26,77 @@ Notes:
 
 # Standard library imports
 import os
+from operator import itemgetter
 
 # Third-party library imports
 from sentinelsat import geojson_to_wkt
 
 # Local module imports
+
+def remove_file_extension(file_path):
+    """
+    Remove the file extension from a given file path.
+
+    Args:
+        file_path (str): File path from which the extension will be removed.
+
+    Returns:
+        str: File name without the extension.
+    """
+
+    filename, file_extension = os.path.splitext(file_path)
+    return filename
+
+
+def find_files_with_strings(folder_path, search_strings):
+    """
+    Find files in a folder that contain specific search strings in their names.
+
+    Args:
+        folder_path (str): Path to the folder where files will be searched.
+        search_strings (list): List of search strings to match in file names.
+
+    Returns:
+        list: List of file paths that match the search strings.
+    """
+
+    # Create an empty list to store the matching file paths
+    matching_files = []
+
+    # Get a list of all files in the folder (not diving into subfolders)
+    with os.scandir(folder_path) as entries:
+        for entry in entries:
+            if entry.is_file() and any(search_str in entry.name for search_str in search_strings):
+                matching_files.append(entry.path)
+
+    return matching_files
+
+
+def most_recent_folders(folder_paths, num_folders=1):
+    """
+    Fetches the most recently created folders and returns their absolute paths.
+
+    Args:
+        folder_paths (list): List of folder paths to search for the most recent ones.
+        num_folders (int): Number of most recent folders to return.
+
+    Returns:
+        list: List of absolute paths of the most recently created folders.
+    """
+
+    folder_info = []
+
+    for folder_path in folder_paths:
+        if not folder_path.endswith('.DS_Store') and os.path.isdir(folder_path):
+            creation_time = os.path.getctime(folder_path)
+            folder_info.append((folder_path, creation_time))
+
+    folder_info.sort(key=itemgetter(1), reverse=True)
+
+    most_recent_folders = [info[0] for info in folder_info[:num_folders]]
+
+    return most_recent_folders
+
 
 def most_recent_folder(folder_paths):
     """

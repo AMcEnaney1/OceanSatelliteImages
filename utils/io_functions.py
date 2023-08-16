@@ -6,6 +6,9 @@ Date: 2023-08-11
 Description: This module contains all the IO functions for this project.
 
 Contents:
+    - move_files_by_type: Function to move files of specified filetype to given location.
+    - del_file: Function to delete file.
+    - delete_folder_with_contents: Function to delete folder and contents.
     - unzip_all_zip_files: Function to unzip all files in given directory.
     - create_batch_folders: Function that takes a path and creates all folders along it.
     - create_folder: Function that creates a folder.
@@ -30,6 +33,71 @@ import zipfile
 
 # Local module imports
 import utils.misc_functions as mf
+
+def move_files_by_type(start_folder, destination_folder, file_type):
+    """
+    Move files of a specific type from a source folder to a destination folder.
+
+    Args:
+        start_folder (str): Path to the source folder where files will be moved from.
+        destination_folder (str): Path to the destination folder where files will be moved to.
+        file_type (str): File extension or type of files to be moved (e.g., '.txt', '.csv').
+
+    Returns:
+        None
+    """
+
+    # Ensure the folders end with a path separator '/'
+    start_folder = os.path.normpath(start_folder) + os.sep
+    destination_folder = os.path.normpath(destination_folder) + os.sep
+
+    # Create the destination folder if it doesn't exist
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+
+    # Get a list of all files in the starting folder (surface level only)
+    files = os.listdir(start_folder)
+    for file in files:
+        if os.path.isfile(os.path.join(start_folder, file)) and file.endswith(file_type):
+            source_file_path = os.path.join(start_folder, file)
+            destination_file_path = os.path.join(destination_folder, file)
+            shutil.move(source_file_path, destination_file_path)
+
+
+def del_file(file_path):
+    """
+    Delete a file at the specified file path.
+
+    Args:
+        file_path (str): Path to the file to be deleted.
+
+    Returns:
+        None
+    """
+
+    try:
+        os.remove(file_path)
+    except OSError as e:
+        print(f"Error: {e}")
+
+
+def delete_folder_with_contents(folder_name):
+    """
+    Deletes a folder along with all of its contents.
+
+    Args:
+        folder_name (str): Path of the folder to be deleted.
+
+    Returns:
+        None
+    """
+
+    try:
+        shutil.rmtree(folder_name)
+        print(f"Folder '{folder_name}' and its contents have been deleted successfully.")
+    except Exception as e:
+        print(f"An error occurred while deleting '{folder_name}': {e}")
+
 
 def unzip_all_zip_files(directory):
     """
