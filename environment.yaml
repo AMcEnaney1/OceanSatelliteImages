@@ -1,7 +1,7 @@
 name: sent
 channels:
-  - defaults
   - conda-forge
+  - defaults
 dependencies:
   - aenum=3.1.15=pyhd8ed1ab_0
   - anyio=3.7.0=pyhd8ed1ab_1
@@ -233,4 +233,3 @@ dependencies:
   - zlib=1.2.13=h8a1eda9_5
   - zlib-ng=2.0.7=hb7f2c08_0
   - zstd=1.5.2=hbc0c0cd_6
-prefix: /Users/aidan/mambaforge/envs/sent
