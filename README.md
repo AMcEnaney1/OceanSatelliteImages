@@ -14,8 +14,6 @@ creating an open source shellfish growth model.
 - [About](#1-about)
 - [Installation](#2-installation)
 - [Usage](#3-usage)
-- [Contact](#4-contact)
-- [License](#license)
 - [TODO](#todo)
 
 ---
@@ -65,10 +63,8 @@ conda activate your-environment-name
 The POLYMER algorithm called be downloaded from 
 [Hygeos](https://www.hygeos.com/polymer), after making an account and 
 accessing the forum. Once downloaded, unzip the downloaded folder and move
-the contained polymer folder into the main directory of this project, 
-note that this is currently the directory 'polymer-v4.16.1' in the
-repository. You will need to move the scripts currently in this directory
-into whichever you move in. Then to make the files navigate back to the polymer
+the contained polymer folder into the directory of this project and merge
+the conda environments. Then to make the files navigate back to the polymer
 directory and run the following commands:
 
 ```shell
@@ -239,21 +235,6 @@ and applying linear models.
 
 ---
 
-## 4. Contact
-
----
-
-If you have any questions, suggestions, or feedback about this project, please feel free to reach out. You can contact me via:
-
-- Email: firstname.lastname@maine.edu
-- GitHub Issues: [Project Issues](https://github.com/AMcEnaney1/OceanSatelliteImages/issues)
-
-This project is in active development and so setup can be a bit clunky,
-I am happy to provide extra direction via email. My email can also be 
-found on my profile.
-
----
-
 ## License
 
 ---
@@ -265,21 +246,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) 
 ## TODO
 
 ---
-
-### General
-
-* When calling 'plot_ndarrys()' in 'satFunctions.py' we check to see if
-the amount of dates plotted in less than or equal to 52. Ideally this
-would be determined by how much ram is allocated by the user in a prompt.
-* Local file/folder paths are still being used in places of the code,
-these need to be changed to absolute file paths.
-* Adding new requests for either of the APIs is confusing, I would like
-to streamline this process.
-* If possible, moving over to virtual environments from conda would be
-preferable, however due to POLYMER using conda this could make things 
-annoying, in which case sticking with conda would be better.
-* Folder structure is currently a bit cluttered, I would like to make 
-more subfolders so organization is a bit cleaner.
 
 ### POLYMER
 
