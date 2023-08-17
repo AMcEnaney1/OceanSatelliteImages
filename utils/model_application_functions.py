@@ -51,16 +51,16 @@ def model_routine_space_eff(bbox, date_tuples, project_name, model, poly_dir, re
         None
     """
 
-    io.create_batch_folders(poly_dir)
+    mf.folder_creation_manage(poly_dir) # Creates the folders needed along the passed path
 
     if (npy_save_to == None):  # Default folder for npy files, this is so POLYMER doesnt get upset
         npy_save_to = project_name + '_' + 'npyFiles'
 
-    for i in range(len(date_tuples)):
+    for i in range(len(date_tuples)): # Loops through dates
 
-        date_tuple = [(str(date_tuples[i][0]), str(date_tuples[i][1]))]
+        date_tuple = [(str(date_tuples[i][0]), str(date_tuples[i][1]))] # Isolates single date
 
-        smf.sentinelsat_routine(bbox, date_tuple, poly_dir, request_function)
+        smf.sentinelsat_routine(bbox, date_tuple, poly_dir, request_function) # Calls the core function for sentinelsat
 
         filevals = mf.get_surface_level_folders(poly_dir)  # Gets a list of the downloaded folders
 
@@ -149,7 +149,7 @@ def convert_eff(tmp_, npy_save_to, model_func):
 
     os.chdir(os.path.join(os.getcwd(), polymer_path)) # Change directory to that of polymer
 
-    tmp_ = mf.remove_overlap(os.getcwd(), tmp_)
+    tmp_ = mf.remove_overlap(os.getcwd(), tmp_) # Turns into local file path
 
     io.move_files_by_type(os.getcwd(), tmp_, '.nc') # Moves the outputs from POLYMER
 

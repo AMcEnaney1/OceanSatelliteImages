@@ -1,5 +1,5 @@
 """
-File: example_models.py
+File: example_model.py
 Author: Aidan McEnaney
 Date: 2023-08-11
 
@@ -45,6 +45,7 @@ def download_and_apply_model():
     date_tuples = mf.get_timeslots(start, end, n_chunks)
 
     # File path
+    # THIS PATH MUST BE DEEPER THAN THE POLYMER DIRECTORY
     file_paths_dict = {
         'poly_dir': os.path.join(polymer_path, 'chlorPoly', project_name) + '/'
     }

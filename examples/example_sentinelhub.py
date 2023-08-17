@@ -182,5 +182,5 @@ def multiple_locations():
 
 if __name__ == "__main__":
     basic_download_single()
-    basic_download_multi()
-    multiple_locations()
+    #basic_download_multi()
+    #multiple_locations()

@@ -35,9 +35,9 @@ def sentinelsat_routine(bbox,  # Bounding box coordinates [min_lon, min_lat, max
         None
     """
 
-    if (download_directory.split('/')[0] == ''):
-        io.create_batch_folders(download_directory)
-    else:
+    if (download_directory.split('/')[0] == ''): # Checks if absolute path
+        io.create_batch_folders_absolute_path(download_directory)
+    else: # If local path
         tmp = download_directory.split('/')
         tmp = ao.move_elements_down_one(tmp)
 
@@ -46,4 +46,4 @@ def sentinelsat_routine(bbox,  # Bounding box coordinates [min_lon, min_lat, max
 
     request_function(date_tuples, bbox, download_directory)  # Downloads zips
 
-    io.unzip_all_zip_files(download_directory)  # Unzips all the folders, so we have folders of .nc files, also deletes zips
+    io.unzip_all_zip_files(download_directory)  # Unzips and deletes all the folders, so we have folders of .nc files

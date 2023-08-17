@@ -6,6 +6,7 @@ Date: 2023-08-11
 Description: Module containing misc functions.
 
 Contents:
+    - folder_creation_manage: Function that decides which folder creation function to use.
     - remove_file_extension: Function to remove file extension.
     - find_files_with_strings: Function that finds files in folders with given strings in their name.
     - most_recent_folders: Function to determine the newest folders of passed folders.
@@ -32,6 +33,14 @@ from operator import itemgetter
 from sentinelsat import geojson_to_wkt
 
 # Local module imports
+import utils.io_functions as io
+
+def folder_creation_manage(path):
+    if (os.path.isabs(path)):
+        io.create_batch_folders_absolute_path(path)
+    else:
+        io.create_batch_folders(path)
+
 
 def remove_file_extension(file_path):
     """

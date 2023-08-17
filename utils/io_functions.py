@@ -10,6 +10,7 @@ Contents:
     - del_file: Function to delete file.
     - delete_folder_with_contents: Function to delete folder and contents.
     - unzip_all_zip_files: Function to unzip all files in given directory.
+    - create_batch_folders_absolute_path: Function that takes an absolute path and creates folders along it.
     - create_batch_folders: Function that takes a path and creates all folders along it.
     - create_folder: Function that creates a folder.
     - create_blank_file: Function that creates a blank file at a passed location.
@@ -124,7 +125,23 @@ def unzip_all_zip_files(directory):
             os.remove(filepath)
 
 
-def create_batch_folders(save_path):
+def create_batch_folders_absolute_path(file_path):
+    """
+    Create a series of nested folders based on the provided file path.
+
+    Args:
+        save_path (str): Absolute path to the file, including the filename at the end.
+
+    Returns:
+        None
+    """
+
+    folder_path = os.path.dirname(file_path)
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+
+def create_batch_folders(save_path, root_path = os.getcwd()):
     """
     Create a series of nested folders based on the provided file path.
 
@@ -136,7 +153,7 @@ def create_batch_folders(save_path):
     """
 
     # Get only deeper folders
-    save_path = mf.remove_overlap(os.getcwd(), save_path)
+    save_path = mf.remove_overlap(root_path, save_path)
 
     folders = save_path.split('/')  # Gets names of required folders
 

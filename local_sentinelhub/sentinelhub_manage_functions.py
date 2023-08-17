@@ -32,6 +32,7 @@ import utils.file_conversion_functions as fcf
 import utils.plot_functions as pf
 import utils.save_file_functions as sff
 import utils.array_operations as ao
+import utils.misc_functions as mf
 
 def sentinelhub_main(resolution,  # Spatial resolution for data retrieval.
          date_tuples,  # List of tuples, each containing start and end dates for data retrieval.
@@ -82,7 +83,8 @@ def sentinelhub_main(resolution,  # Spatial resolution for data retrieval.
     # We also need to create our log file, if one doesn't already exist
 
     if (not os.path.exists(operations_save_path)): # Operation log file doesn't already exist
-        io.create_batch_folders(operations_save_path) # Creates folders leading up to file
+        mf.folder_creation_manage(operations_save_path) # Creates folders leading up to file
+
         io.create_blank_file(operations_save_path) # Create operation log file if it doesn't already exist
 
     if (not (type(preface) is list)):
@@ -93,8 +95,7 @@ def sentinelhub_main(resolution,  # Spatial resolution for data retrieval.
 
         # Creating csv
         if (not os.path.exists(csvpath[i])): # Checks if csv already exists
-            io.create_batch_folders(csvpath[i])
-            io.create_blank_file(csvpath[i])
+            mf.folder_creation_manage(csvpath[i])  # Creates folders leading up to file
 
         if (createImages):
             nonexisting = io.check_files_exist(date_tuples, operext, sat_image_save_path, preface[i])
