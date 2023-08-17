@@ -1,32 +1,36 @@
 #!/bin/bash
 
-# List of bash script files to modify
-script_files=(
-    "delete_files.sh"
-    "clean.sh"
-    "run.sh"
-    "run_polymer.sh"
-    "polymer-v4.16.1/poly_script_olci.py"
-    "polymer-v4.16.1/poly_script_ascii.py"
-    "polymer-v4.16.1/poly_script_meris.py"
-    "polymer-v4.16.1/poly_script_msi.py"
-    # Add more paths as needed
-)
+# Check if the user provided a project directory as an argument
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <project_directory>"
+    exit 1
+fi
 
-# Function to set the permissions on the script files
-set_permissions() {
-    local script_path=$1
-    local permission=$2
+project_directory="$1"
 
-    if [ -f "$script_path" ]; then
-        chmod "$permission" "$script_path"
-        echo "Changed permissions of $script_path to $permission"
-    else
-        echo "Error: File not found - $script_path"
-    fi
+# Check if the provided project directory exists
+if [ ! -d "$project_directory" ]; then
+    echo "Error: Project directory '$project_directory' not found."
+    exit 1
+fi
+
+# Function to set permissions for .py and .sh files recursively
+set_permissions_recursive() {
+    for file in "$1"/*; do
+        if [ -d "$file" ]; then
+            set_permissions_recursive "$file"
+        elif [ -f "$file" ]; then
+            if [[ "$file" == *.py || "$file" == *.sh ]]; then
+                chmod +x "$file"
+            fi
+        fi
+    done
 }
 
-# Loop through the script_files array and set the desired permissions (replace '755' with your desired permission)
-for script_file in "${script_files[@]}"; do
-    set_permissions "$script_file" "755"
-done
+# Change to the project directory
+cd "$project_directory" || exit 1
+
+# Start setting permissions from the current directory
+set_permissions_recursive .
+
+echo "Permissions set for .py and .sh files in all folders and subfolders of '$project_directory'."

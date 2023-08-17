@@ -102,7 +102,14 @@ scripts included, to do so run the following commands:
 
 ```shell
 chmod +x init.sh
-./init.sh
+./init.sh /absolute/path/to/project_directory
+```
+
+If you do not know it the absolute path to the project directory can be
+obtained by moving into the project directory then using the command
+
+```shell
+pwd
 ```
 
 #### 3.2.1 POLYMER Ancillary Data
