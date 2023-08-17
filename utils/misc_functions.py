@@ -36,6 +36,15 @@ from sentinelsat import geojson_to_wkt
 import utils.io_functions as io
 
 def folder_creation_manage(path):
+    """
+    Passes file path to correct function for it to be created.
+
+    Args:
+        path (str): File path of which to create folders along.
+
+    Returns:
+        None
+    """
     if (os.path.isabs(path)):
         io.create_batch_folders_absolute_path(path)
     else:
@@ -236,6 +245,18 @@ def remove_overlap(current_working_directory, deeper_file_path):
 
 
 def make_absolute_paths(file_paths):
+    """
+    Convert a list of file paths to their absolute equivalents, preserving any trailing slashes.
+
+    This function takes a list of file paths and converts each path to its absolute form using the `os.path.abspath()`
+    function. If a path originally had a trailing '/', this trailing slash is preserved in the absolute path.
+
+    Args:
+        file_paths (list of str): A list of file paths to be converted to absolute paths.
+
+    Returns:
+        list of str: A list of absolute paths, with trailing slashes preserved if present in the original paths.
+    """
     absolute_paths = []
 
     for path in file_paths:
@@ -248,6 +269,20 @@ def make_absolute_paths(file_paths):
 
 
 def make_absolute_paths_dict(file_paths_dict):
+    """
+    Convert file paths within a dictionary to their absolute equivalents, preserving any trailing slashes.
+
+    This function takes a dictionary where keys represent labels and values are either strings or lists of file paths.
+    It converts each file path to its absolute form using the `os.path.abspath()` function. If a path originally had a
+    trailing '/', this trailing slash is preserved in the absolute path.
+
+    Args:
+        file_paths_dict (dict): A dictionary with keys representing labels and values containing file path(s) to be
+                               converted to absolute paths.
+
+    Returns:
+        None. The input dictionary is modified in place with absolute paths, and no new dictionary is returned.
+    """
     for key, paths in file_paths_dict.items():
         if isinstance(paths, str):
             absolute_path = os.path.abspath(paths)
@@ -265,6 +300,21 @@ def make_absolute_paths_dict(file_paths_dict):
 
 
 def make_absolute_paths_list(list_of_dicts):
+    """
+    Convert file paths within a list of dictionaries to their absolute equivalents, preserving any trailing slashes.
+
+    This function takes a list of dictionaries, where each dictionary contains key-value pairs. The values can be
+    either strings or lists of file paths. The function converts each file path to its absolute form using the
+    `os.path.abspath()` function. If a path originally had a trailing '/', this trailing slash is preserved in the
+    absolute path.
+
+    Args:
+        list_of_dicts (list): A list of dictionaries, where each dictionary contains key-value pairs. The values
+                             can be file path(s) to be converted to absolute paths.
+
+    Returns:
+        None. The input list of dictionaries is modified in place with absolute paths, and no new list is returned.
+    """
     for file_paths_dict in list_of_dicts:
         for key, paths in file_paths_dict.items():
             if isinstance(paths, str):

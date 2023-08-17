@@ -1,6 +1,13 @@
-## Aidan McEnaney
-## August 1st, 2023
-## Python file to store requests for sentinelsat API
+"""
+File: request_functions.py
+Author: Aidan McEnaney
+Date: 2023-08-17
+
+Description: Python file to store requests for sentinelsat API.
+
+Notes:
+    - This code is distributed under the MIT License. See LICENSE.txt for more details.
+"""
 
 ## Start of imports
 

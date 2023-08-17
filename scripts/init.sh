@@ -33,4 +33,18 @@ cd "$project_directory" || exit 1
 # Start setting permissions from the current directory
 set_permissions_recursive .
 
+# Prompt the user for the Conda file path
+read -p "Enter the Conda file path (e.g., '/Users/aidan/mambaforge/etc/profile.d/conda.sh'): " conda_file_path
+
+# Determine the path for the text file
+text_file_path="$project_directory/text_files/conda_source_path.txt"
+
+# Check if the Conda file path is not the same as the content of the text file
+if [ "$(cat "$text_file_path")" != "$conda_file_path" ]; then
+    echo "$conda_file_path" > "$text_file_path"
+    echo "Conda file path saved to '$text_file_path'."
+else
+    echo "Conda file path is already up to date."
+fi
+
 echo "Permissions set for .py and .sh files in all folders and subfolders of '$project_directory'."
