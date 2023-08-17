@@ -1,10 +1,17 @@
-## Aidan McEnaney
-## June 30th, 2023
-## Python file to store requests for sentinelHub API
+"""
+File: requestFunctions.py
+Author: Aidan McEnaney
+Date: 2023-08-17
+
+Description: Python file to store requests for sentinelHub API.
+
+Notes:
+    - This code is distributed under the MIT License. See LICENSE.txt for more details.
+"""
 
 ## Start of imports
 
-import evalscripts
+import local_sentinelhub.evalscripts as evalscripts
 from sentinelhub import (
     DataCollection,
     MimeType,

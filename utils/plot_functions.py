@@ -1,20 +1,29 @@
-## Aidan McEnaney
-## June 30th, 2023
-## Functions used for plotting
+"""
+File: plot_functions.py
+Author: Aidan McEnaney
+Date: 2023-08-11
 
+Description: This module contains all the plotting functions for this project.
 
-## Start of imports
+Contents:
+    - plot_ndarrays: Function to create a nice looking collection of npy files.
+    - plot_csv_data: Function that plots data from a provided csv file.
 
+Notes:
+    - This code is distributed under the MIT License. See LICENSE.txt for more details.
+"""
+
+# Standard library imports
 import os
 import csv
+
+# Third-party library imports
 import matplotlib.pyplot as plt
 import numpy as np
-import satFunctions
 
-## End of imports
-
-## This is where function to create plots and figures can go.
-## The included 'utils.py' file is part of the SentinelHub examples and makes for easy plotting, good for testing.
+# Local module imports
+import utils.io_functions as io
+import utils.misc_functions as mf
 
 
 def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
@@ -78,7 +87,7 @@ def plot_ndarrays(ndarrays, titles, coordinates, num_columns=3, save_path=None):
         check_path = os.path.join(*list(check_path[:len(check_path)]))
         #if (not os.path.exists(save_path)):
         if (not os.path.exists(check_path)):
-            satFunctions.create_batch_folders(save_path)
+            io.create_batch_folders(save_path)
         plt.savefig(save_path)  # Save the figure as an image file
 
     plt.close()
@@ -113,7 +122,7 @@ def plot_csv_data(csv_path, down_path, column_name, ylabel, corner_text, title=N
             start_date = date_range.strip('()').split(',')[0].strip().strip("'")
             dates.append(start_date)
             if (fah):
-                values.append(satFunctions.kelvin_to_fahrenheit(float(row[column_name])))
+                values.append(mf.kelvin_to_fahrenheit(float(row[column_name])))
             else:
                 values.append(float(row[column_name]))
 

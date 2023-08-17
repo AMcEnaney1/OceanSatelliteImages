@@ -1,13 +1,20 @@
-## Aidan McEnaney
-## August 1st, 2023
-## Python file to store requests for sentinelsat API
+"""
+File: request_functions.py
+Author: Aidan McEnaney
+Date: 2023-08-17
+
+Description: Python file to store requests for sentinelsat API.
+
+Notes:
+    - This code is distributed under the MIT License. See LICENSE.txt for more details.
+"""
 
 ## Start of imports
 
 from datetime import datetime, timedelta
 from collections import OrderedDict
-import satFunctions
-from configg import *
+from conf.config import *
+import utils.misc_functions as mf
 
 ## End of imports
 
@@ -27,7 +34,7 @@ def get_olci(date_tuples,  # List of tuples, each containing start and end dates
         None
     """
 
-    wkt_bbox = satFunctions.bbox_to_WKT(bbox)
+    wkt_bbox = mf.bbox_to_WKT(bbox)
 
     # Initialize an empty OrderedDict to store the products
     products = OrderedDict()
@@ -76,7 +83,7 @@ def get_olci_singular(date_tuple,     # Tuple containing start and end dates for
         None
     """
 
-    wkt_bbox = satFunctions.bbox_to_WKT(bbox)
+    wkt_bbox = mf.bbox_to_WKT(bbox)
 
     # Initialize an empty OrderedDict to store the products
     products = OrderedDict()
