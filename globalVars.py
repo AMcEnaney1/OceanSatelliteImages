@@ -27,15 +27,15 @@ coordinates = [(-69.9040, 43.8586, -69.8987, 43.8651)] # These will be turned in
 projectName = ['MaxFarm'] # These will be prefixes in the relevant files
 
 # These variables set the start and end dates for the data collection
-start_year = 2020
+start_year = 2021
 end_year = 2023
-start_month = 1
-end_month = 12
+start_month = 4
+end_month = 4
 start_day = 1
 end_day = 30
 
 # This is 1 more than the amount of data points you want to collect
-n_chunks = 320
+n_chunks = 15
 
 # List of boolean values, one per bounding box
 createImages = [False] # If True, .npy and .png images will be created when making calls with SentinelHub
@@ -118,8 +118,6 @@ chlorPoly_save_path1 = polymer_root_name
 
 # This is the name of the folder where everything for the chlorophyll algorithm will take place
 chlorPoly_folder_name = 'chlorPoly'
-chlorPoly_save_path2 = os.path.join(chlorPoly_folder_name, '')
-chlorPoly_save_path = os.path.join(chlorPoly_save_path1, chlorPoly_save_path2)
 
 # This is the name of the folder for .npy files created from post-polymer nc files
 npy_file_folder_name_suffix = '_poly_files'
@@ -149,6 +147,8 @@ date_tuples = satFunctions.get_timeslots(start, end, n_chunks)
 
 figure_save_path = os.path.join(outputs_folder, figure_path_folder_name, '')
 sat_image_save_path = os.path.join(outputs_folder, sat_image_folder_name, image_folder_name, '')
+chlorPoly_save_path2 = os.path.join(chlorPoly_folder_name, '')
+chlorPoly_save_path = os.path.join(chlorPoly_save_path1, chlorPoly_save_path2)
 
 length = len(projectName)
 
