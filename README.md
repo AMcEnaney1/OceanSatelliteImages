@@ -93,7 +93,7 @@ forum post</a>.</summary>
 
 ---
 
-### 3.1 First Run
+### 3.1 Setup and Configs
 
 #### 3.1.1 Initialize Scripts
 
@@ -112,7 +112,16 @@ obtained by moving into the project directory then using the command
 pwd
 ```
 
-#### 3.2.1 POLYMER Ancillary Data
+Here you will also be prompted to enter the conda source path, this should
+be the same as the one that will be placed in 'config.py'.
+
+#### 3.1.2 Config
+
+A few variables will need to be set in 'OceanSatelliteImages/config.py',
+these being the polymer directory path, script folder path and 
+the conda source path.
+
+#### 3.1.3 POLYMER Ancillary Data
 
 To get ancillary data working in polymer you must first create an account
 on [Earthdata](https://urs.earthdata.nasa.gov/). We then need to create a 
@@ -125,53 +134,46 @@ chmod  0600 ~/.netrc
 where USERNAME is replaced with your earthdata username and PASSWD your
 password.
 
-#### 3.3.1 API Keys
+#### 3.1.4 API Keys
 
-API keys must be entered into the 'keys.py' file or otherwise configured. 
+API keys must be entered into the 'conf/keys.py' file or otherwise configured. 
 For SentinelHub information on API keys can be found [here](https://docs.sentinel-hub.com/api/latest/api/overview/authentication/)
 and for Sentinelsat your API the keys are your username and password used 
 [here](https://scihub.copernicus.eu/dhus/#/home).
 
-#### 3.3.2 API Config
+#### 3.1.5 API Config
 
-After setting your API keys you can set up the API confifgs in 'configg.py'.
+After setting your API keys you can set up the API confifgs in 
+'conf/config.py':
 If you are not using one of the APIs you need to comment out the lines 
 containing its config, if you have added an API you can add its config here,
-and if you have changed any variable names in 'keys.py' you need to make
+and if you have changed any variable names in 'conf/keys.py' you need to make
 the change here as well.
 
-#### 3.3.3 Global Variables
 
-All the variables subject to change that are needed for the regular
-function of the code are contained in 'GlobalVars.py' and can be set there.
-This includes farm bounding boxes and names, time frames, data points, and
-folder/file names, as well as several others. If you wish to get the bands
-already specified in 'sat.py' you only need change bounding box locations, 
-farm names, start and end time and the number of data points.
+### 3.2 Running Code
 
-### 3.4 Running Entire Code
+The code can be run from bash scripts or just from within python itself.
+To view an example of running via bash you can go to the scripts directory
+and run
 
-The primary way to run this code is via bash script, individual functions
-can be run on their own but may rely on variables created by scripts.
+```shell
+./run.sh /absolute/path/to/project_directory
+```
 
-#### 3.4.1 Bash Script
-
-To run the bash script, 'manage.sh' first make sure your bash environment
-is set up to run conda commands, do this with the following command: (This
-may not work, in which case I suggest using mamba.)
+then enter the example inputs when prompted, this will run the 
+'example_for_script.py' file. Note that you may be required to configure
+conda to work within bash, this can be done with the following command:
 
 ```shell
 conda init
 ```
 
-Now go into the 'run.sh' script and set the conda path to your system's,
-then you can run the bash script,
+Every file in the 'examples' folder can also just be run within python
+without any issues.
 
-```shell
-./run.sh
-```
 
-### 3.5 Following Runs
+### 3.3 Following Runs
 
 For SentinelHub the program is written in such a way such that for subsequent runs of
 the code, after the first, so long as the log file remains needless
@@ -181,13 +183,13 @@ again with the end date moved back, though you may want to delete
 generated figures first. If you do not want this behavior simply
 delete the log file. To delete all the output data you can run:
 ```shell
-./clean.sh out/
+./clean.sh /absolute/path/to/out/
 ```
 where here 'out' is root folder for our outputs from the SentinelHub API.
 The same can be done for your outputs from the Sentinelsat API, however 
-may require some care.
+may require some care, as you do not want to delete code.
 
-### 3.6 Running POLYMER
+### 3.4 Running POLYMER
 
 As of now there is only a working script for running POLYMER on OLCI data 
 included with my code,
@@ -196,52 +198,28 @@ or individual ones. To do so use either the 'call_polymer()' or the
 'run_polymer_on_folder()' function, where the latter runs with a batch
 of data. 
 
-### 3.7 Modifying requests
+### 3.5 Modifying requests
 
-#### 3.7.1 Adding SentinelHub requests
+#### 3.5.1 Adding SentinelHub requests
 
 As is this code allows for both individual and bulk requests of satellite
 bands from all [supported satellites](https://docs.sentinel-hub.com/api/latest/data/).
 
 If you are adding a request of a singular band you need to first add an
 evalscript to the 'evalscripts.py' file, then add the corresponding
-request function to the 'requestFunctions.py' file. Once you have done
-this you can define the relevant file and folder paths in 'globalVars.py',
-these would be a string representing the preface and a string representing
-a suffix for the related csv files. Then move down to the computations
-section and set up a csv path using the current paths as examples. You
-are now ready to call this request in the main function of 'sat.py'.
+request function to the 'requestFunctions.py' file.
 
-If you are adding a request of multiple bands you can do the same steps
-as done for the singular band, only this time when moving to the computations
-section be sure to create a new for loop as directed at the top of 
-'globalVars.py'.
 
-#### 3.7.2 Removing SentinelHub requests
-
-To remove requests you can just remove the code calling them from
-the main function in 'sat.py'.
-
-#### 3.7.3 Adding Sentinelsat requests
+#### 3.5.2 Adding Sentinelsat requests
 
 To add a sentinelsat request you can define a new request function
-in the 'sentinelsatRequests.py' file. Documentation for creating
+in the 'request_functions.py' file. Documentation for creating
 these exist [here](https://sentinelsat.readthedocs.io/en/latest/api_reference.html).
 
-Then you need to create a folder name for this new request, before creating
-a list representing the directories for each different 
-location/bounding box. It is recommended to have this path be of the form
-'polymer_root_directory/location_name/request_name' and may not work 
-otherwise. This should be fixed in later versions of the code.
+### 3.6 Examples
 
-#### 3.7.3 Removing Sentinelsat requests
-
-See above.
-
-### 3.8 Examples
-
-Examples of how to utilize the different functions are present in 
-'sat.py'. This includes sentinelHub, sentinelsat, running POLYMER,
+Examples of how to utilize the different functions are present in the
+'examples' folder. This includes sentinelHub, sentinelsat, running POLYMER,
 and applying linear models.
 
 ---
@@ -280,13 +258,9 @@ the amount of dates plotted in less than or equal to 52. Ideally this
 would be determined by how much ram is allocated by the user in a prompt.
 * Local file/folder paths are still being used in places of the code,
 these need to be changed to absolute file paths.
-* Adding new requests for either of the APIs is confusing, I would like
-to streamline this process.
 * If possible, moving over to virtual environments from conda would be
 preferable, however due to POLYMER using conda this could make things 
 annoying, in which case sticking with conda would be better.
-* Folder structure is currently a bit cluttered, I would like to make 
-more subfolders so organization is a bit cleaner.
 
 ### POLYMER
 
